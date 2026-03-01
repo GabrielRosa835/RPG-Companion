@@ -1,0 +1,10 @@
+﻿using RpgCompanion.Core.Engine;
+using RpgCompanion.Core.Selectors;
+
+namespace RpgCompanion.Core.Objects;
+
+public interface IPlayer
+{
+   object ChooseFrom(IChoice options, IContext context);
+   T ChooseFrom <T>(IChoice<T> options, IContext context);
+}
