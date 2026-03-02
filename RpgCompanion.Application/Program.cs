@@ -1,34 +1,43 @@
-﻿using Microsoft.Extensions.Hosting;
-
-using RpgCompanion.Core.Meta;
-using RpgCompanion.Core.Utils;
-
+﻿using System.Reflection;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Utils.UnionTypes;
 
 namespace RpgCompanion.Application;
 
 public static class Program
 {
-   const string PLUGINS_FOLDER = @"C:\Storage\Programação\C#\RpgCompanion\RpgCompanion.Application\plugins\";
    public static void Main (string[] args)
    {
       var builder = Host.CreateApplicationBuilder(args);
 
-      var registryCollection = new RegistryCollection(builder.Services);
-      var plugins = new PluginLoader().LoadPlugins(PLUGINS_FOLDER, registryCollection);
-      foreach (var plugin in plugins)
-      {
-         Console.WriteLine(JsonSerializer.Serialize(plugin));
-      }
+      builder.Services.AddSingleton<PluginManager>();
 
       var host = builder.Build();
-      var registry = new Registry(host.Services);
+      
+      var pluginManager = host.Services.GetRequiredService<PluginManager>();
+      
+      string executingAssembly = Assembly.GetExecutingAssembly().Location;
+      Console.WriteLine(executingAssembly);
+      
+      string pluginsFolder = Path.Join(Path.GetDirectoryName(executingAssembly), "plugins");
+      Console.WriteLine(pluginsFolder);
+      
+      pluginManager.FindPlugins(pluginsFolder);
+      Console.WriteLine(pluginManager[0].Name);
+      
+      Console.WriteLine(pluginManager[0].System);
+      var attempt = pluginManager.Load(pluginManager[0]);
 
-      var initializers = registry.GetServices(typeof(IInitializer));
-      var method = typeof(IInitializer).GetMethod(nameof(IInitializer.Initialize));
-      foreach (var initializer in initializers)
+      if (attempt.TryGetFailure(out var failure))
       {
-         method?.Invoke(initializer, [registry]);
+         Console.WriteLine(failure);
+      }
+      else
+      {
+         Console.WriteLine(pluginManager[0].System.Name);
       }
    }
 }

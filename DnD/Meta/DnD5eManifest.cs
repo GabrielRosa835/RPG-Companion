@@ -8,11 +8,9 @@ namespace RpgCompanion.DnD;
 
 internal class DnD5eManifest : IManifest<DnD5e>
 {
-   public void RegisterInitializer (IRegistryCollection collection)
-   {
-      collection.Add<IInitializer, DnD5eInitializer>();
-   }
-   public void RegisterComponents (IRegistryCollection collection)
+   public Type Initializer => typeof(DnD5eInitializer);
+
+   public void Setup (IRegistryCollection collection)
    {
       collection.Add<IRule<DiceRollEvent>, DiceRoll>();
       collection.Add<IEventHandler<DiceRollEvent>, DiceRollHandler>();

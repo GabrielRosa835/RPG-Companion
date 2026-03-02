@@ -2,11 +2,7 @@
 
 namespace RpgCompanion.Core.Meta;
 
-
-public interface IInitializer
+public interface IInitializer<TSystem>  where TSystem : ISystem
 {
    void Initialize (IRegistry registry);
-}
-public interface IInitializer<TSystem> : IInitializer where TSystem : ISystem
-{
 }

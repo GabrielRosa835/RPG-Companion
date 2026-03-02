@@ -2,8 +2,8 @@
 
 namespace RpgCompanion.Core.Meta;
 
-public interface IManifest<TSystem> where TSystem : ISystem
+public interface IManifest<out TSystem> where TSystem : ISystem
 {
-   void RegisterInitializer(IRegistryCollection services);
-   void RegisterComponents(IRegistryCollection services);
+   Type Initializer { get; }
+   void Setup(IRegistryCollection services);
 }
