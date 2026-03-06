@@ -3,10 +3,10 @@ using RpgCompanion.Core.Objects;
 
 namespace RpgCompanion.Core.Engine;
 
-public interface IContext
+internal interface IContextSnapshot
 {
-   IEngine Engine { get; }
    IEvent Trigger { get; }
+   IScene Scene { get; }
    IReadOnlyList<IObject> Objects { get; }
-   Dictionary<string, dynamic> SharedData { get; }
+   IReadOnlyList<IPlayer> Players { get; }
 }

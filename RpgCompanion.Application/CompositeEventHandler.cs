@@ -7,11 +7,11 @@ internal record CompositeEvent (IEnumerable<IEvent> Events) : IEvent<IEventProdu
 
 internal class CompositeEventHandler : IEventHandler<CompositeEvent>
 {
-   public void Handle (CompositeEvent @event, IContext context)
+   public void Handle (CompositeEvent @event, Context context)
    {
       foreach(var inner in @event.Events)
       {
-         context.Engine.EventQueue.Push (inner);
+         context.Engine.EventQueue.Raise (inner);
       }
    }
 }

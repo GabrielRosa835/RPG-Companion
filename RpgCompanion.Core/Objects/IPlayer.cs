@@ -5,6 +5,6 @@ namespace RpgCompanion.Core.Objects;
 
 public interface IPlayer
 {
-   object ChooseFrom(IChoice options, IContext context);
-   T ChooseFrom <T>(IChoice<T> options, IContext context);
+   object ChooseFrom(IChoice options, Context context);
+   T ChooseFrom <T>(IChoice<T> options, Context context);
 }

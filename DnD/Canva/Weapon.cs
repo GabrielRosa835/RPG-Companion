@@ -9,7 +9,7 @@ public class Weapon : IObject
 {
    public int Damage { get; set; }
 
-   public void Accept<TEvent> (IEffect<TEvent> effect, IContext context) where TEvent : IEvent<IEffect<TEvent>>
+   public void Accept<TEvent> (IEffect<TEvent> effect, Context context) where TEvent : IEvent<IEffect<TEvent>>
    {
       throw new NotImplementedException();
    }

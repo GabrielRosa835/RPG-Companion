@@ -5,12 +5,12 @@ namespace RpgCompanion.Core.Selectors;
 
 public interface ITarget
 {
-   IObject Select(IContext context);
+   IObject Select(Context context);
 
-   public static ITarget Of (Func<IContext, IObject> @delegate) => new TargetDelegate(@delegate);
+   public static ITarget Of (Func<Context, IObject> @delegate) => new TargetDelegate(@delegate);
 }
 
-internal class TargetDelegate (Func<IContext, IObject> @delegate) : ITarget
+internal class TargetDelegate (Func<Context, IObject> @delegate) : ITarget
 {
-   public IObject Select (IContext context) => @delegate(context);
+   public IObject Select (Context context) => @delegate(context);
 }

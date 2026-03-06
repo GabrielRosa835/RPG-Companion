@@ -4,30 +4,36 @@ using RpgCompanion.Core.Events.Producers;
 
 namespace RpgCompanion.Application;
 
-public class Engine
+internal class Engine
 {
-   private readonly IContextProvider _contextProvider;
-   private readonly IEventQueue _eventQueue;
-   private readonly IRegistry _registry;
+   private readonly Dictionary<Type, PluginDescriptor> _events = default!;
+   private readonly Dictionary<string, PluginDescriptor> _plugins = default!;
+   private readonly PluginManager _pluginManager = default!;
+   private readonly EventQueue _queue = default!;
 
-   public Engine (IContextProvider contextProvider, IEventQueue eventQueue, IRegistry registry)
+   public async Task Execute(PluginDescriptor plugin)
    {
-      _contextProvider = contextProvider;
-      _eventQueue = eventQueue;
-      _registry = registry;
-   }
-
-   public async Task ExecuteLoop()
-   {
-      while(!_eventQueue.Any())
+      while(!_queue.Any())
       {
          await Task.Delay(100);
       }
 
-      IEvent @event = _eventQueue.Pop();
-      IContext context = _contextProvider.Bundle(@event);
+      if (!plugin.Activated)
+      {
+         var loadAttempt = _pluginManager.Load(plugin);
+         if (loadAttempt.IsFailure)
+         {
+            return;
+         }
+      }
 
-      IEnumerable<IInterceptor> interceptors = _registry.GetInterceptorsFor(@event);
+      var contextProvider = plugin.Registry.Get<IContextProvider>() ?? default!;
+
+      IEvent @event = _queue.Dequeue();
+      Context context = contextProvider.Bundle(@event);
+
+      // TODO: Reflection
+      IEnumerable<IInterceptor> interceptors = plugin.Registry.GetInterceptorsFor(@event);
       ICollection<IEvent> intercepted = [];
       foreach (IInterceptor interceptor in interceptors)
       {
@@ -38,7 +44,7 @@ public class Engine
          @event = new CompositeEvent(intercepted);
       }
 
-      IEnumerable<IEventHandler> handlers = _registry.GetHandlersFor(@event);
+      IEnumerable<IEventHandler> handlers = plugin.Registry.GetHandlersFor(@event);
       foreach (IEventHandler handler in handlers)
       {
          handler.Handle(@event, context);

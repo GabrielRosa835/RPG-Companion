@@ -4,7 +4,7 @@ using RpgCompanion.Core.Objects;
 
 namespace RpgCompanion.Application;
 
-public class TestContext : IContext
+public class TestContext : Context
 {
    public IEngine Engine => null!;
 

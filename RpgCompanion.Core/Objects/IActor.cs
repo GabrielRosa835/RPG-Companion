@@ -6,5 +6,5 @@ namespace RpgCompanion.Core.Objects;
 
 public interface IActor : IObject
 {
-   void Act<TEvent>(IAction<TEvent> action, IContext context) where TEvent : IEvent<IAction<TEvent>>;
+   void Act<TEvent>(IAction<TEvent> action, Context context) where TEvent : IEvent<IAction<TEvent>>;
 }

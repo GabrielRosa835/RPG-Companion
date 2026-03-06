@@ -4,5 +4,5 @@ namespace RpgCompanion.Core.Engine;
 
 public interface IContextProvider
 {
-   IContext Bundle(IEvent @event);
+   Context Bundle(IEvent @event);
 }

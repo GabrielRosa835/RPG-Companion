@@ -16,7 +16,7 @@ public record MeleeAttackEvent (
 
 internal class MeleeAttack : IAction<MeleeAttackEvent>
 {
-   public MeleeAttackEvent For (IActor actor, IContext context)
+   public MeleeAttackEvent For (IActor actor, Context context)
    {
       var currentPlayer = (IPlayer) null!;
       var targetOptions = IChoice<IObject>.Of(context => new OptionList<IObject>([]));

@@ -10,7 +10,7 @@ internal record AttackActionEvent (IEvent<AttackAction> Inner) : IEvent<AttackAc
 
 internal class AttackAction (IAction<IEvent<AttackAction>> action) : IAction<AttackActionEvent>
 {
-   public AttackActionEvent For (IActor actor, IContext context)
+   public AttackActionEvent For (IActor actor, Context context)
    {
       var inner = action.For(actor, context);
       return new AttackActionEvent(inner);
@@ -25,7 +25,7 @@ internal class AttackAction (IAction<IEvent<AttackAction>> action) : IAction<Att
 
 internal class AttackActionEventHandler : IEventHandler<AttackActionEvent>
 {
-   public void Handle (AttackActionEvent @event, IContext context)
+   public void Handle (AttackActionEvent @event, Context context)
    {
       if (@event.Inner is MeleeAttackEvent meleeAttackEvent)
       {

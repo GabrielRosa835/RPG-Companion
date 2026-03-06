@@ -5,5 +5,5 @@ namespace RpgCompanion.Core.Events.Producers;
 
 public interface IAction<out TEvent> : IEventProducer where TEvent : IEvent<IAction<TEvent>>
 {
-   TEvent For (IActor actor, IContext context);
+   TEvent For (IActor actor, Context context);
 }

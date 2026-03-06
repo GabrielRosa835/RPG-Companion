@@ -6,5 +6,5 @@ namespace RpgCompanion.Core.Objects;
 
 public interface IObject
 {
-   void Accept<TEvent> (IEffect<TEvent> effect, IContext context) where TEvent : IEvent<IEffect<TEvent>>;
+   void Accept<TEvent> (IEffect<TEvent> effect, Context context) where TEvent : IEvent<IEffect<TEvent>>;
 }
