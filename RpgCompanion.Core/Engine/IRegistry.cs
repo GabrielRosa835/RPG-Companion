@@ -7,7 +7,4 @@ public interface IRegistry
 {
    T? Get<T> ();
    T GetRequired<T> ();
-
-   IEnumerable<IInterceptor> GetInterceptorsFor (IEvent @event);
-   IEnumerable<IEventHandler> GetHandlersFor (IEvent @event);
 }

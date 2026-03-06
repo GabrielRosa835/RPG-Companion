@@ -3,10 +3,9 @@
 public interface IEvent
 {
    string Name { get; }
-
-   public static IEvent Empty => new EmptyEvent();
 }
-public interface IEvent<out T> : IEvent where T : IEventProducer
+
+public record struct EmptyEvent : IEvent
 {
-   public static new IEvent<T> Empty => new EmptyEvent<T>();
+   public string Name => nameof(EmptyEvent);
 }

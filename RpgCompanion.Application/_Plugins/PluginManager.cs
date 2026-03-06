@@ -10,16 +10,16 @@ namespace RpgCompanion.Application;
 
 internal class PluginManager
 {
-   private List<PluginDescriptor> _descriptors = [];
-   public IReadOnlyList<PluginDescriptor> Descriptors => _descriptors;
+   private readonly List<PluginDescriptor> _descriptors = [];
+   public IReadOnlyList<PluginDescriptor> Descriptors => _descriptors.AsReadOnly();
 
    public PluginDescriptor this[int index] => _descriptors[index];
    public PluginDescriptor this[string name] => _descriptors.First(d => d.Name == name);
 
-   public bool TryGetDescriptor (string name, out PluginDescriptor descriptor)
+   public bool TryGetPlugin (string name, out PluginDescriptor plugin)
    {
-      descriptor = _descriptors.FirstOrDefault(d => d.Name == name)!;
-      return descriptor is not null;
+      plugin = _descriptors.FirstOrDefault(d => d.Name == name)!;
+      return plugin is not null;
    }
 
    public IReadOnlyList<PluginDescriptor> FindPlugins (string pluginsFolder)
@@ -28,29 +28,18 @@ internal class PluginManager
       {
          throw new DirectoryNotFoundException(pluginsFolder);
       }
-      _descriptors = Directory.GetFiles(pluginsFolder, "*.dll", SearchOption.AllDirectories)
+      _descriptors.AddRange(Directory.GetFiles(pluginsFolder, "*.dll", SearchOption.AllDirectories)
           .Select(dll => new PluginDescriptor
           {
              Name = Path.GetFileNameWithoutExtension(dll),
              Path = Path.GetFullPath(dll),
           })
-          .ToList();
-      return _descriptors.AsReadOnly();
+          .Where(d => !_descriptors.Contains(d)));
+      return Descriptors;
    }
 
    public Attempt Load (PluginDescriptor descriptor)
    {
-      bool TryActivate<T> (Type? type, out T instance)
-      {
-         if (type is null)
-         {
-            instance = default!;
-            return false;
-         }
-
-         instance = (T?) Activator.CreateInstance(type)!;
-         return instance is not null;
-      }
       try
       {
          var context = new AssemblyLoadContext(descriptor.Name, isCollectible: true);
@@ -91,11 +80,12 @@ internal class PluginManager
          var initializer = serviceProvider.GetRequiredService(manifest.Initializer);
 
          var method = manifestType!.GetMethod(nameof(IInitializer<>.Initialize));
-         method?.Invoke(manifest, [registry]);
+         method?.Invoke(initializer, [registry]);
 
          descriptor.Assembly = assembly;
          descriptor.System = system;
          descriptor.Registry = registry;
+         descriptor.Provider = serviceProvider;
          descriptor.Activated = true;
 
          return Results.Success();
@@ -104,5 +94,16 @@ internal class PluginManager
       {
          return Results.Failure(e);
       }
+   }
+   
+   private static bool TryActivate<T> (Type? type, out T instance)
+   {
+      if (type is null)
+      {
+         instance = default!;
+         return false;
+      }
+      instance = (T?) Activator.CreateInstance(type)!;
+      return instance is not null;
    }
 }

@@ -3,15 +3,18 @@ using RpgCompanion.Core.Events;
 
 namespace RpgCompanion.Application;
 
-internal record CompositeEvent (IEnumerable<IEvent> Events) : IEvent<IEventProducer>;
+internal record CompositeEvent (IEnumerable<IEvent> Events) : IEvent
+{
+   public string Name => nameof(CompositeEvent);
+}
 
 internal class CompositeEventHandler : IEventHandler<CompositeEvent>
 {
-   public void Handle (CompositeEvent @event, Context context)
+   public void Handle (CompositeEvent @event, IContext context)
    {
       foreach(var inner in @event.Events)
       {
-         context.Engine.EventQueue.Raise (inner);
+         context.Raise(inner);
       }
    }
 }

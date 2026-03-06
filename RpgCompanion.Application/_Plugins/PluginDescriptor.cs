@@ -5,7 +5,7 @@ using RpgCompanion.Core.Meta;
 
 namespace RpgCompanion.Application;
 
-internal class PluginDescriptor
+internal class PluginDescriptor : IEquatable<PluginDescriptor>
 {
     internal string Path { get; init; } = default!;
     internal string Name { get; init; } = default!;
@@ -14,4 +14,10 @@ internal class PluginDescriptor
     internal ISystem System { get; set; } = default!;
     internal Assembly Assembly { get; set; } = default!;
     internal IRegistry Registry { get; set; } = default!;
+    internal IServiceProvider Provider { get; set; } = default!;
+    
+    public bool Equals(PluginDescriptor? other)
+    {
+        return Path == other?.Path && Name == other?.Name;
+    }
 }

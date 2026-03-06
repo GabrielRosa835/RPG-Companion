@@ -3,12 +3,7 @@ using RpgCompanion.Core.Utils;
 
 namespace RpgCompanion.Core.Events;
 
-public interface IEventHandler
+public interface IEventHandler<in TEvent> where TEvent : IEvent
 {
-   void Handle (IEvent @event, Context context);
-}
-public interface IEventHandler<in TEvent> : IEventHandler where TEvent : IEvent<IEventProducer>
-{
-   void Handle (TEvent @event, Context context);
-   void IEventHandler.Handle (IEvent @event, Context context) => Handle (@event.As<TEvent>(), context);
+   void Handle (TEvent @event, IContext context);
 }
