@@ -1,17 +1,18 @@
-﻿using System.Collections;
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+
 using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Events;
+
+using System.Collections;
+
+using Utils.UnionTypes;
 
 namespace RpgCompanion.Application;
 
 internal class Engine
 {
-   private readonly Dictionary<string, PluginDescriptor> _plugins = default!;
    private readonly PluginManager _pluginManager = default!;
    private readonly EventQueue _queue = default!;
-   private MethodInfo? _method; 
 
    public async Task Execute(PluginDescriptor plugin)
    {
@@ -20,45 +21,59 @@ internal class Engine
          await Task.Delay(100);
       }
 
-      if (!plugin.Activated)
+      if (await ActivatePlugin(plugin, _pluginManager).IsFailure())
       {
-         var loadAttempt = _pluginManager.Load(plugin);
-         if (loadAttempt.IsFailure)
-         {
-            return;
-         }
+         return;
       }
 
       IEvent @event = _queue.Dequeue();
-      Type type = @event.GetType();
-      var context = new Context();
-      
-      var templateType = typeof(IContextTemplate<>).MakeGenericType(type);
-      var template = plugin.Provider.GetService(templateType);
-      
-      _method = templateType.GetMethod(nameof(IContextTemplate<>.Bundle));
-      _method?.Invoke(template, [context]);
-
-      var contractType = typeof(IEventContract<>).MakeGenericType(type);
-      var contract = plugin.Provider.GetService(contractType);
-
+      var context = new Context(plugin);
       var validator = new ContextValidator();
-      if (contract is not null)
-      {
-         validator.ValidateInputs(context, contract, type);
-      }
 
-      var handlerType = typeof(IEffect<>).MakeGenericType(type);
-      IEnumerable handlers = plugin.Provider.GetServices(handlerType);
-      _method = handlerType.GetMethod(nameof(IEffect<>.Apply));
-      foreach (var handler in handlers)
-      {
-         _method?.Invoke(handler, [@event, context]);
-      }
+      await BundleContext(@event, context, plugin.Registry);
+
+      var contract = plugin.Registry.GetContract(@event);
 
       if (contract is not null)
       {
-         validator.ValidateOutputs(context, contract, type);
+         validator.ValidateInputs(context, contract, @event.GetType());
+      }
+
+      await ApplyEffects(@event, context, plugin.Provider);
+
+      if (contract is not null)
+      {
+         validator.ValidateOutputs(context, contract, @event.GetType());
+      }
+   }
+
+   private static async Task<Attempt> ActivatePlugin(PluginDescriptor plugin, PluginManager manager)
+   {
+      if (plugin.Activated)
+      {
+         return Results.Success();
+      }
+      return manager.Load(plugin);
+   }
+
+   private static async Task BundleContext(IEvent @event, IContext context, ComponentProvider registry)
+   {
+      var template = registry.GetTemplate(@event);
+      var bundle = template?.GetType().GetMethod(nameof(IContextTemplate<>.Bundle));
+      bundle?.Invoke(template, [context]);
+   }
+
+   private static async Task ApplyEffects(IEvent @event, IContext context, IServiceProvider provider)
+   {
+      var effectType = typeof(IEffect<>).MakeGenericType(@event.GetType());
+
+      IEnumerable effects = provider.GetServices(effectType);
+
+      var applyEffect = effectType.GetMethod(nameof(IEffect<>.Apply));
+
+      foreach (var effect in effects)
+      {
+         applyEffect?.Invoke(effect, [@event, context]);
       }
    }
 }

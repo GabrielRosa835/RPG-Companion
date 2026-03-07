@@ -1,5 +1,6 @@
 ﻿namespace RpgCompanion.Core.Engine;
 
-public interface IRegistry
+public interface IPluginBuilder
 {
+
 }

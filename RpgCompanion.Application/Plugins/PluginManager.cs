@@ -46,9 +46,9 @@ internal class PluginManager
          var assembly = context.LoadFromAssemblyPath(descriptor.Path);
 
          var systemType = assembly.GetTypes()
-             .FirstOrDefault(t => typeof(ISystem).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
+             .FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
 
-         if(!TryActivate(systemType, out ISystem system))
+         if(!TryActivate(systemType, out IPlugin system))
          {
             return Results.Failure();
          }
@@ -62,20 +62,20 @@ internal class PluginManager
                    i.GetGenericArguments()[0] == systemType);
          });
 
-         if (!TryActivate(manifestType, out IManifest<ISystem> manifest))
+         if (!TryActivate(manifestType, out IManifest<IPlugin> manifest))
          {
             return Results.Failure();
          }
 
          var services = new ServiceCollection();
-         var registryCollection = new RegistryCollection(services);
+         var registryCollection = new PluginBuilder(services);
 
          services.AddTransient(manifest.Initializer);
 
          manifest.Setup(registryCollection);
 
          var serviceProvider = services.BuildServiceProvider();
-         var registry = new Registry(serviceProvider);
+         var registry = new ComponentProvider(serviceProvider);
 
          var initializer = serviceProvider.GetRequiredService(manifest.Initializer);
 

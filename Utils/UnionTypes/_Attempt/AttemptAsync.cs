@@ -7,4 +7,13 @@ public static class AttemptAsync
     {
         return attemptTask.ContinueWith(task => task.Result.Either(onSuccess, onFailure), cancellationToken);
     }
+
+   public static Task<bool> IsFailure(this Task<Attempt> attemptTask)
+   {
+      return attemptTask.ContinueWith(task => task.Result.IsFailure);
+   }
+   public static Task<bool> IsSuccess (this Task<Attempt> attemptTask)
+   {
+      return attemptTask.ContinueWith(task => task.Result.IsSuccess);
+   }
 }

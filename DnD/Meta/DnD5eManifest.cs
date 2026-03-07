@@ -10,7 +10,7 @@ internal class DnD5eManifest : IManifest<DnD5e>
 {
    public Type Initializer => typeof(DnD5eInitializer);
 
-   public void Setup (IRegistryCollection collection)
+   public void Setup (IPluginBuilder collection)
    {
       collection.Add<IRule<DiceRoll>, DiceRollRule>();
       collection.Add<IEffect<DiceRoll>, DiceRollEffect>();

@@ -1,6 +1,6 @@
 ﻿namespace RpgCompanion.Core.Meta;
 
-public interface ISystem
+public interface IPlugin
 {
    string Id { get; }
    string Name { get; }

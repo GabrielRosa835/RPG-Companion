@@ -1,12 +1,17 @@
-﻿using RpgCompanion.Core.Events;
+﻿using RpgCompanion.Application;
+using RpgCompanion.Core.Events;
 
 namespace RpgCompanion.Core.Engine;
 
-internal class Context : IContext
+internal class Context (PluginDescriptor plugin) : IContext
 {
    internal readonly ContextData _data = new();
+   internal readonly ComponentProvider _registry = plugin.Registry;
 
    public IContextData Data => _data;
+   public IRegistry Registry => _registry;
+   IReadOnlyCollection<IEvent> ProcessedEvents { get; } = [];
+   IReadOnlyCollection<IEffect<IEvent>> ProcessedEffects { get; } = [];
 
    public void Raise (IEvent @event)
    {

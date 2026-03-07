@@ -6,12 +6,10 @@ public interface IRule<out TEvent> where TEvent : IEvent
 {
    TEvent Apply (IContext context);
 
-   public static IRule<TEvent> Of(RuleDelegate<TEvent> ruleDelegate) => new RuleWrapper<TEvent>(ruleDelegate);
-   
+   public static IRule<TEvent> Of(Func<IContext, TEvent> apply) => new RuleWrapper<TEvent>(apply);
 }
-public delegate TEvent RuleDelegate<out TEvent>(IContext context) where TEvent : IEvent;
 
-internal readonly record struct RuleWrapper<TEvent> (RuleDelegate<TEvent> rule) : IRule<TEvent> where TEvent : IEvent
+internal readonly record struct RuleWrapper<TEvent> (Func<IContext, TEvent> apply) : IRule<TEvent> where TEvent : IEvent
 {
-   public TEvent Apply(IContext context) => rule(context);
+   public TEvent Apply(IContext context) => apply(context);
 }
