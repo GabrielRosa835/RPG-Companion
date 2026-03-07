@@ -19,12 +19,12 @@ public class Registry(IServiceProvider provider) : IRegistry
       var interceptors = provider.GetServices(validInterceptors);
       return interceptors.As<IEnumerable<IInterceptor>>();
    }
-   public IEnumerable<IEventHandler> GetHandlersFor (IEvent @event)
+   public IEnumerable<IEffect<>> GetHandlersFor (IEvent @event)
    {
       Type eventType = @event.GetType();
-      Type validHandlers = typeof(IEventHandler<>).MakeGenericType(eventType);
+      Type validHandlers = typeof(IEffect<>).MakeGenericType(eventType);
       var handlers = provider.GetServices(validHandlers);
-      return handlers.As<IEnumerable<IEventHandler>>();
+      return handlers.As<IEnumerable<IEffect<>>>();
    }
 
    public IEnumerable<object?> GetServices (Type serviceType)

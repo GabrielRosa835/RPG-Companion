@@ -1,8 +1,6 @@
-﻿using RpgCompanion.Core.Objects;
+﻿namespace RpgCompanion.DnD;
 
-namespace RpgCompanion.DnD;
-
-public abstract class Dice : IComponent
+public abstract class Dice
 {
    public abstract int Roll ();
 

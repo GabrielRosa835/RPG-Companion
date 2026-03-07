@@ -11,7 +11,7 @@ public interface IRule<out TEvent> where TEvent : IEvent
 }
 public delegate TEvent RuleDelegate<out TEvent>(IContext context) where TEvent : IEvent;
 
-internal class RuleWrapper<TEvent> (RuleDelegate<TEvent> ruleDelegate) : IRule<TEvent> where TEvent : IEvent
+internal readonly record struct RuleWrapper<TEvent> (RuleDelegate<TEvent> rule) : IRule<TEvent> where TEvent : IEvent
 {
-   public TEvent Apply(IContext context) => ruleDelegate(context);
+   public TEvent Apply(IContext context) => rule(context);
 }

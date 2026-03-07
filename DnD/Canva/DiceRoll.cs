@@ -4,24 +4,27 @@ using RpgCompanion.Core.Events.Producers;
 
 namespace RpgCompanion.DnD;
 
-public partial class DiceRoll : IRule<DiceRollEvent>
+public record DiceRoll(Dice Dice) : EventBase(nameof(DiceRoll)), IEventContract<DiceRoll>
 {
-   public const string PENDING_DICE = nameof(PENDING_DICE);
-
-   public DiceRollEvent Handle (Context context)
+   public static readonly ContextKey<Dice> PendingDice = new(nameof(PendingDice));
+   public static readonly ContextKey<int> RollResult = new(nameof(RollResult));
+   
+   public IEnumerable<ContextKey> Requirements => [PendingDice];
+   public IEnumerable<ContextKey> Outputs => [RollResult];
+}
+public class DiceRollRule : IRule<DiceRoll>
+{
+   public DiceRoll Apply(IContext context)
    {
-      Dice dice = context.SharedData[PENDING_DICE];
-      return new DiceRollEvent(dice);
+      return new DiceRoll(new Dice.D20());
    }
 }
-public record DiceRollEvent (Dice Dice) : IEvent<DiceRoll>;
-
-public class DiceRollHandler : IEventHandler<DiceRollEvent>
+public class DiceRollEffect : IEffect<DiceRoll>
 {
-   public const string ROLL_RESULT = nameof(ROLL_RESULT);
-   public void Handle (DiceRollEvent @event, Context context)
+   public void Apply(DiceRoll @event, IContext context)
    {
-      context.SharedData[ROLL_RESULT] = @event.Dice.Roll();
-      Console.WriteLine("Dice rolled: "+ context.SharedData[ROLL_RESULT]);
+      var dice = context.Data.Get(DiceRoll.PendingDice);
+      int result = dice.Roll();
+      context.Data.Set(DiceRoll.RollResult, result);
    }
 }

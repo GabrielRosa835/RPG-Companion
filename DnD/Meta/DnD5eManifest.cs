@@ -12,8 +12,8 @@ internal class DnD5eManifest : IManifest<DnD5e>
 
    public void Setup (IRegistryCollection collection)
    {
-      collection.Add<IRule<DiceRollEvent>, DiceRoll>();
-      collection.Add<IEventHandler<DiceRollEvent>, DiceRollHandler>();
+      collection.Add<IRule<DiceRoll>, DiceRollRule>();
+      collection.Add<IEffect<DiceRoll>, DiceRollEffect>();
    }
 
 }

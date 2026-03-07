@@ -8,9 +8,9 @@ internal record CompositeEvent (IEnumerable<IEvent> Events) : IEvent
    public string Name => nameof(CompositeEvent);
 }
 
-internal class CompositeEventHandler : IEventHandler<CompositeEvent>
+internal class CompositeEffect : IEffect<CompositeEvent>
 {
-   public void Handle (CompositeEvent @event, IContext context)
+   public void Apply (CompositeEvent @event, IContext context)
    {
       foreach(var inner in @event.Events)
       {

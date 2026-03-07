@@ -48,9 +48,9 @@ internal class Engine
          validator.ValidateInputs(context, contract, type);
       }
 
-      var handlerType = typeof(IEventHandler<>).MakeGenericType(type);
+      var handlerType = typeof(IEffect<>).MakeGenericType(type);
       IEnumerable handlers = plugin.Provider.GetServices(handlerType);
-      _method = handlerType.GetMethod(nameof(IEventHandler<>.Handle));
+      _method = handlerType.GetMethod(nameof(IEffect<>.Apply));
       foreach (var handler in handlers)
       {
          _method?.Invoke(handler, [@event, context]);
