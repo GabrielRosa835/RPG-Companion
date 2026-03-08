@@ -13,3 +13,5 @@ internal record RuleWrapper<TEvent> (Func<IContextSnapshot, TEvent> apply) : IRu
 {
    public TEvent Apply(IContextSnapshot context) => apply(context);
 }
+
+

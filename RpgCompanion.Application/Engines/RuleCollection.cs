@@ -2,29 +2,25 @@
 
 namespace RpgCompanion.Application.Engines;
 
-internal class RuleCollection(IEnumerable<(object Rule, RulePlacement Placement)> values)
+internal class RuleCollection
 {
-   internal readonly List<(object Rule, RulePlacement Placement)> _rules = new(values);
+   internal readonly List<ComponentDescriptor> _rules;
 
-   internal IEnumerable<object> BeforeEvent ()
+   public RuleCollection (IEnumerable<ComponentDescriptor> rules)
    {
-      return WithPlacement(RulePlacement.BeforeEvent);
+      _rules = new(rules);
    }
-   internal IEnumerable<object> AfterEvent ()
-   {
-      return WithPlacement(RulePlacement.AfterEvent);
-   }
-   //internal IEnumerable<object> BeforeEffect ()
-   //{
-   //   return WithPlacement(RulePlacement.BeforeEffect);
-   //}
-   //internal IEnumerable<object> AfterEffect()
-   //{
-   //   return WithPlacement(RulePlacement.AfterEvent);
-   //}
 
-   private IEnumerable<object> WithPlacement(RulePlacement placement)
+   internal ComponentDescriptor? FirstOrDefault()
    {
-      return _rules.Where(r => r.Placement == placement).Select(r => r.Rule);
+      return _rules.FirstOrDefault();
+   }
+   internal IEnumerable<ComponentDescriptor> BeforeEvent ()
+   {
+      return _rules.Where(r => r.Rule_Placement == RulePlacement.BeforeEvent);
+   }
+   internal IEnumerable<ComponentDescriptor> AfterEvent ()
+   {
+      return _rules.Where(r => r.Rule_Placement == RulePlacement.AfterEvent);
    }
 }

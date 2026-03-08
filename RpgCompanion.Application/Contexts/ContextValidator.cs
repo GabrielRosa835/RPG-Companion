@@ -1,50 +1,48 @@
+using RpgCompanion.Application.Reflection;
+using RpgCompanion.Application.Services;
 using RpgCompanion.Core.Contexts;
-
-using System.Reflection;
 
 namespace RpgCompanion.Core.Engine;
 
-// TODO: Integrar direto no DI
-internal class ContextValidator
+internal class ContextValidator (Reflect reflect)
 {
-    private static PropertyInfo? _requirements(Type eventType)
-    {
-        return typeof(IEventContract<>).MakeGenericType(eventType).GetProperty(nameof(IEventContract<>.Requirements));
-    }
-    private static PropertyInfo? _outputs(Type eventType)
-    {
-        return typeof(IEventContract<>).MakeGenericType(eventType).GetProperty(nameof(IEventContract<>.Outputs));
-    }
-    
-    public void ValidateInputs (Context context, object contract, Type eventType)
-    {
-        IEnumerable<ContextKey>? requirements = (IEnumerable<ContextKey>?) _requirements(eventType)?.GetValue(contract);
-        if (requirements is null)
-        {
-            return;
-        }
-        foreach (var key in requirements)
-        {
-            if (!context._data.Contains(key))
-            {
-                throw new ContractViolationException($"Event '{eventType.Name}' missing input: {key}");
-            }
-        }
-    }
+   private readonly Reflect _reflect = reflect;
 
-    public void ValidateOutputs (Context context, object contract, Type eventType)
-    {
-        IEnumerable<ContextKey>? outputs = (IEnumerable<ContextKey>?) _outputs(eventType)?.GetValue(contract);
-        if (outputs is null)
-        {
-            return;
-        }
-        foreach (var key in outputs)
-        {
-            if (!context._data.Contains(key))
-            {
-                throw new ContractViolationException($"Event '{eventType.Name}' failed to produce output: {key}");
-            }
-        }
-    }
+   public void ValidateInputs (ComponentDescriptor contract, Context context)
+   {
+      IEnumerable<ContextKey>? requirements = _reflect
+          .ContractRequirements(contract.GenericType)?
+          .GetValue(contract)?
+          .As<IEnumerable<ContextKey>>();
+      if (requirements is null)
+      {
+         return;
+      }
+      foreach (var key in requirements)
+      {
+         if (!context._data.Contains(key))
+         {
+            throw new ContractViolationException($"Event '{contract.EventType!.Name}' missing input: {key}");
+         }
+      }
+   }
+
+   public void ValidateOutputs (ComponentDescriptor contract, Context context)
+   {
+      IEnumerable<ContextKey>? outputs = _reflect
+          .ContractRequirements(contract.GenericType)?
+          .GetValue(contract)?
+          .As<IEnumerable<ContextKey>>();
+      if (outputs is null)
+      {
+         return;
+      }
+      foreach (var key in outputs)
+      {
+         if (!context._data.Contains(key))
+         {
+            throw new ContractViolationException($"Event '{contract.EventType!.Name}' failed to produce output: {key}");
+         }
+      }
+   }
 }

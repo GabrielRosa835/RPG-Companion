@@ -15,36 +15,38 @@ internal class ComponentProvider
       _provider = provider;
    }
 
-   internal object? GetTemplate (Type eventType)
+   internal ComponentDescriptor? GetTemplate (Type eventType)
    {
       var descriptor = FindTemplateFor(eventType);
       if (descriptor is null) return null;
-      var template = _provider.GetService(descriptor.GenericType);
-      return template;
+      var template = _provider.GetRequiredService(descriptor.GenericType);
+      descriptor.Instance = template;
+      return descriptor;
    }
-   internal object? GetContract (Type eventType)
+   internal ComponentDescriptor? GetContract (Type eventType)
    {
       var descriptor = FindContractFor(eventType);
       if (descriptor is null) return null;
-      var contract = _provider.GetService(descriptor.GenericType);
-      return contract;
+      var contract = _provider.GetRequiredService(descriptor.GenericType);
+      descriptor.Instance = contract;
+      return descriptor;
    }
-   internal ICollection<(object Rule, RulePlacement Placement)> GetRules (Type eventType)
+   internal IEnumerable<ComponentDescriptor> GetRules (Type eventType)
    {
       var ruleDescriptors = FindRulesFor(eventType);
       if (!ruleDescriptors.Any()) return [];
       return _provider.GetServices(ruleDescriptors.First().GenericType)
          .Where(s => s is not null)
-         .Select(s => (s!, ruleDescriptors.First(d => d.ComponentType == s!.GetType()).Rule_Placement!.Value))
+         .Select (s => ruleDescriptors.First(d => d.ComponentType == s!.GetType()))
          .ToList();
    }
-   internal ICollection<(object Effect, int Priority)> GetEffects (Type eventType)
+   internal IEnumerable<ComponentDescriptor> GetEffects (Type eventType)
    {
       var effectDescriptors = FindEffectsFor(eventType);
       if (!effectDescriptors.Any()) return [];
       return _provider.GetServices(effectDescriptors.First().GenericType)
          .Where(s => s is not null)
-         .Select(s => (s!, effectDescriptors.First(d => d.ComponentType == s!.GetType()).Effect_Priority!.Value))
+         .Select(s => effectDescriptors.First(d => d.ComponentType == s!.GetType()))
          .ToList();
    }
 

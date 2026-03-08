@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Canva", "Canva\RpgCompanion.Canva.csproj", "{D6698F3D-7282-E2F6-6E12-30FBD123BE46}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "DnD\RpgCompanion.DnD.csproj", "{34B6B956-2E0E-F4ED-E18D-A07050EC4025}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils", "Utils\Utils.csproj", "{65B858B0-FA7C-8D60-ADB1-EB168B88825D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F923189F-788B-45E0-A4DC-2932E0658298}"
@@ -18,20 +14,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Application", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Core", "RpgCompanion.Core\RpgCompanion.Core.csproj", "{AFE4258A-7EE4-4C5A-9A79-3FC484B38FAA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "RpgCompanion.DnD\RpgCompanion.DnD.csproj", "{33326DBD-BC78-F8AC-454E-60FD2204602F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Example", "RpgCompanion.Example\RpgCompanion.Example.csproj", "{11C61314-2FC2-4288-98CD-79795B626178}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D6698F3D-7282-E2F6-6E12-30FBD123BE46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D6698F3D-7282-E2F6-6E12-30FBD123BE46}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D6698F3D-7282-E2F6-6E12-30FBD123BE46}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D6698F3D-7282-E2F6-6E12-30FBD123BE46}.Release|Any CPU.Build.0 = Release|Any CPU
-		{34B6B956-2E0E-F4ED-E18D-A07050EC4025}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{34B6B956-2E0E-F4ED-E18D-A07050EC4025}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{34B6B956-2E0E-F4ED-E18D-A07050EC4025}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{34B6B956-2E0E-F4ED-E18D-A07050EC4025}.Release|Any CPU.Build.0 = Release|Any CPU
 		{65B858B0-FA7C-8D60-ADB1-EB168B88825D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{65B858B0-FA7C-8D60-ADB1-EB168B88825D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65B858B0-FA7C-8D60-ADB1-EB168B88825D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -44,6 +36,14 @@ Global
 		{AFE4258A-7EE4-4C5A-9A79-3FC484B38FAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFE4258A-7EE4-4C5A-9A79-3FC484B38FAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFE4258A-7EE4-4C5A-9A79-3FC484B38FAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11C61314-2FC2-4288-98CD-79795B626178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11C61314-2FC2-4288-98CD-79795B626178}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11C61314-2FC2-4288-98CD-79795B626178}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11C61314-2FC2-4288-98CD-79795B626178}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
