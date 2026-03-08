@@ -1,4 +1,4 @@
-﻿using RpgCompanion.Core.Engine;
+﻿using RpgCompanion.Core.Contexts;
 
 namespace RpgCompanion.Core.Events;
 
@@ -8,7 +8,7 @@ public interface IEffect<in TEvent> where TEvent : IEvent
    public static IEffect<TEvent> Of(Action<TEvent, IContext> apply) => new EffectWrapper<TEvent>(apply);
 }
 
-internal readonly record struct EffectWrapper<TEvent> (Action<TEvent, IContext> apply) 
+internal record EffectWrapper<TEvent> (Action<TEvent, IContext> apply) 
    : IEffect<TEvent> where TEvent : IEvent
 {
    public void Apply (TEvent @event, IContext context) => apply(@event, context);

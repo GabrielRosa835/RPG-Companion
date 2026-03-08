@@ -1,7 +1,10 @@
+using RpgCompanion.Core.Contexts;
+
 using System.Reflection;
 
 namespace RpgCompanion.Core.Engine;
 
+// TODO: Integrar direto no DI
 internal class ContextValidator
 {
     private static PropertyInfo? _requirements(Type eventType)

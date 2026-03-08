@@ -1,4 +1,4 @@
-namespace RpgCompanion.Core.Engine;
+namespace RpgCompanion.Core.Contexts;
 
 public abstract record ContextKey (string Name);
 

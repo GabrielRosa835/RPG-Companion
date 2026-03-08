@@ -1,17 +1,19 @@
-﻿using RpgCompanion.Core.Engine;
+﻿using RpgCompanion.Core.Contexts;
 
 namespace RpgCompanion.Core.Events;
 
-public interface IEffectChecker<in TEvent> where TEvent : IEvent
+public interface IEffectChecker<in TEvent, TEffect> where TEvent : IEvent where TEffect : IEffect<TEvent>
 {
    bool ShouldApply (TEvent @event, IContext context);
-   public static IEffectChecker<TEvent> Of (Func<TEvent, IContext, bool> shouldApply)
-      => new EffectCheckerWrapper<TEvent>(shouldApply);
+   public static IEffectChecker<TEvent, TEffect> Of (Func<TEvent, IContext, bool> shouldApply)
+      => new EffectCheckerWrapper<TEvent, TEffect>(shouldApply);
 }
 
-internal readonly record struct EffectCheckerWrapper<TEvent> (
+internal record EffectCheckerWrapper<TEvent, TEffect> (
    Func<TEvent, IContext, bool> shouldApply)
-   : IEffectChecker<TEvent> where TEvent : IEvent
+   : IEffectChecker<TEvent, TEffect>
+   where TEvent : IEvent 
+   where TEffect : IEffect<TEvent>
 {
    public bool ShouldApply (TEvent @event, IContext context) => shouldApply(@event, context);
 }

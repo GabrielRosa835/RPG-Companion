@@ -1,4 +1,5 @@
-﻿using RpgCompanion.Core.Engine;
+﻿using RpgCompanion.Core.Contexts;
+using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Events;
 using RpgCompanion.Core.Events.Producers;
 
@@ -15,7 +16,7 @@ public record DiceRoll(Dice Dice) : EventBase(nameof(DiceRoll)), IEventContract<
 
 public class DiceRollRule : IRule<DiceRoll>
 {
-   public DiceRoll Apply(IContext context)
+   public DiceRoll Apply(IContextSnapshot context)
    {
       return new DiceRoll(new Dice.D20());
    }
@@ -31,4 +32,19 @@ public class DiceRollEffect : IEffect<DiceRoll>
       context.Data.Set(DiceRoll.RollResult, result);
    }
    public bool ShouldApply (DiceRoll @event, IContext context) => true;
+}
+
+public class RollAppliesCheck : IRuleChecker<DiceRoll, DiceRollRule>
+{
+   public bool ShouldApply (IContextSnapshot context)
+   {
+      throw new NotImplementedException();
+   }
+}
+public class ShouldRollCheck : IEffectChecker<DiceRoll, DiceRollEffect>
+{
+   public bool ShouldApply (DiceRoll @event, IContext context)
+   {
+      throw new NotImplementedException();
+   }
 }

@@ -1,15 +1,15 @@
-﻿using RpgCompanion.Core.Engine;
+﻿using RpgCompanion.Core.Contexts;
 
 namespace RpgCompanion.Core.Events.Producers;
 
 public interface IRule<out TEvent> where TEvent : IEvent
 {
-   TEvent Apply (IContext context);
+   TEvent Apply (IContextSnapshot context);
 
-   public static IRule<TEvent> Of(Func<IContext, TEvent> apply) => new RuleWrapper<TEvent>(apply);
+   public static IRule<TEvent> Of(Func<IContextSnapshot, TEvent> apply) => new RuleWrapper<TEvent>(apply);
 }
 
-internal readonly record struct RuleWrapper<TEvent> (Func<IContext, TEvent> apply) : IRule<TEvent> where TEvent : IEvent
+internal record RuleWrapper<TEvent> (Func<IContextSnapshot, TEvent> apply) : IRule<TEvent> where TEvent : IEvent
 {
-   public TEvent Apply(IContext context) => apply(context);
+   public TEvent Apply(IContextSnapshot context) => apply(context);
 }

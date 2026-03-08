@@ -1,6 +1,8 @@
+using RpgCompanion.Core.Contexts;
+
 namespace RpgCompanion.Core.Engine;
 
-internal class ContextData : IContextData
+internal class ContextData : IContextData, IReadonlyContextData
 {
     private readonly Dictionary<string, dynamic> _data = new();
     

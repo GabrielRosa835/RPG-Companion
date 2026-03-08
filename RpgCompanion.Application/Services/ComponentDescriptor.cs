@@ -4,9 +4,10 @@ namespace RpgCompanion.Application.Services;
 
 internal class ComponentDescriptor
 {
-   public object? ComponentInstance { get; set; } = default!;
    public Type ComponentType { get; set; } = default!;
    public Type? EventType { get; set; }
+   public Type GenericType { get; set; } = default!;
+
    public IPlugin Plugin { get; set; } = default!;
    public ComponentCategory Category { get; set; } = default!;
 
@@ -27,8 +28,8 @@ public enum RulePlacement
    None,
    BeforeEvent,
    AfterEvent,
-   BeforeEffect,
-   AfterEffect,
+   //BeforeEffect,
+   //AfterEffect,
 }
 
 public enum ComponentCategory
@@ -38,8 +39,8 @@ public enum ComponentCategory
    Effect,
    Contract,
    Template,
-   EffectChecker,
-   RuleChecker,
+   //EffectChecker,
+   //RuleChecker,
 }
 
 internal static class EffectPriorityExtensions

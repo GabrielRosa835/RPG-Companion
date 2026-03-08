@@ -1,6 +1,6 @@
 using RpgCompanion.Core.Events;
 
-namespace RpgCompanion.Core.Engine;
+namespace RpgCompanion.Core.Contexts;
 
 public interface IContextTemplate<in TEvent> where TEvent : IEvent
 {

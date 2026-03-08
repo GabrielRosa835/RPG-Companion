@@ -1,4 +1,5 @@
 ﻿using RpgCompanion.Application.Services;
+using RpgCompanion.Core.Contexts;
 using RpgCompanion.Core.Events;
 using RpgCompanion.Core.Events.Producers;
 using RpgCompanion.Core.Meta;
@@ -8,6 +9,15 @@ namespace RpgCompanion.Application;
 public static class Canva
 {
    public record TestPlugin (string Id, string Name, string Version) : IPlugin;
+   public record TestRule : IRule<Event>
+   {
+      public Event Apply (IContextSnapshot context)
+      {
+         throw new NotImplementedException();
+      }
+   }
+
+   public record Event () : EventBase(nameof(Event));
    public static void Test()
    {
       var plugin = new TestPlugin("", "", "");
@@ -24,18 +34,9 @@ public static class Canva
       var effect4 = IEffect<Event>.Of((e, c) => { });
 
       builder.On<Event>()
-         .AddRule(rule1)
-         .WithPlacement(RulePlacement.AfterEffect)
-         .Return()
-         .AddRule(rule2)
-         .WithPlacement(RulePlacement.BeforeEffect)
-         .Return()
-         .AddEffect(effect1)
-         .WithPriority(1)
-         .Return();
-   }
+         .AddRule<TestRule>()
 
-   public record Event () : EventBase(nameof(Event));
+   }
 }
 
 internal class PluginBuilder (ComponentCollection components)
@@ -50,54 +51,34 @@ internal class PluginBuilder (ComponentCollection components)
 
 internal class EventBuilder<TEvent>(ComponentCollection components) where TEvent : IEvent
 {
-   public RuleBuilder<TRule, TEvent> AddRule<TRule>() where TRule : IRule<TEvent>
+   public RuleBuilder<TRule, TEvent> AddRule<TRule>(TRule? rule = default) where TRule : IRule<TEvent>
    {
-      var descriptor = components.AddRule<TRule, TEvent>();
-      return new RuleBuilder<TRule, TEvent>(this, descriptor);  
-   }
-   public RuleBuilder<TRule, TEvent> AddRule <TRule>(TRule rule) where TRule : IRule<TEvent>
-   {
-      var descriptor = components.AddRule<TRule, TEvent>(rule);
-      return new RuleBuilder<TRule, TEvent>(this, descriptor);
-   }
-
-   public EffectBuilder<TEffect, TEvent> AddEffect<TEffect> () where TEffect : IEffect<TEvent>
-   {
-      var descriptor = components.AddEffect<TEffect, TEvent>();
-      return new EffectBuilder<TEffect, TEvent>(this, descriptor);
-   }
-   public EffectBuilder<TEffect, TEvent> AddEffect<TEffect> (TEffect effect) where TEffect : IEffect<TEvent>
-   {
-      var descriptor = components.AddEffect<TEffect, TEvent>(effect);
-      return new EffectBuilder<TEffect, TEvent>(this, descriptor);
+      return new RuleBuilder<TRule, TEvent>(this, components, rule);  
    }
 }
 
-internal class RuleBuilder<TRule, TEvent> (EventBuilder<TEvent> previous, ComponentDescriptor descriptor) 
+internal class RuleBuilder<TRule, TEvent> (
+   EventBuilder<TEvent> previous,
+   ComponentCollection components,
+   TRule? instance = default) 
    where TEvent : IEvent
    where TRule : IRule<TEvent>
 {
-   public EventBuilder<TEvent> Return () => previous;
-   public RuleBuilder<TRule, TEvent> WithPlacement (RulePlacement placement)
-   {
-      descriptor.Rule_Placement = placement;
-      return this;
-   }
-}
+   private RulePlacement _placement = RulePlacement.AfterEvent;
 
-internal class EffectBuilder<TEffect, TEvent> (EventBuilder<TEvent> previous, ComponentDescriptor descriptor)
-   where TEvent : IEvent
-   where TEffect : IEffect<TEvent>
-{
-   public EventBuilder<TEvent> Return () => previous;
-   public EffectBuilder<TEffect, TEvent> WithPriority (EffectPriority priority)
+   public EventBuilder<TEvent> Return () 
    {
-      descriptor.Effect_Priority = priority.Value();
+      components.AddRule(typeof(TRule), typeof(TEvent), typeof(IRule<TEvent>), _placement, instance);
+      return previous;
+   }
+   public RuleBuilder<TRule, TEvent> AfterEvent ()
+   {
+      _placement = RulePlacement.AfterEvent;
       return this;
    }
-   public EffectBuilder<TEffect, TEvent> WithPriority (int priority)
+   public RuleBuilder<TRule, TEvent> BeforeEvent ()
    {
-      descriptor.Effect_Priority = priority;
+      _placement = RulePlacement.BeforeEvent;
       return this;
    }
 }

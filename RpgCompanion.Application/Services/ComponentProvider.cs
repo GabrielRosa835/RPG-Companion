@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
 using RpgCompanion.Application.Services;
-using RpgCompanion.Core.Engine;
-using RpgCompanion.Core.Events;
-using RpgCompanion.Core.Events.Producers;
 
 namespace RpgCompanion.Application;
 
@@ -12,63 +9,68 @@ internal class ComponentProvider
    private readonly IReadOnlyList<ComponentDescriptor> _components;
    private readonly IServiceProvider _provider;
 
-   internal ComponentProvider(IEnumerable<ComponentDescriptor> components, IServiceProvider provider) 
+   internal ComponentProvider (IEnumerable<ComponentDescriptor> components, IServiceProvider provider)
    {
       _components = new List<ComponentDescriptor>(components).AsReadOnly();
       _provider = provider;
    }
 
-   public T GetRequired<T> () where T : notnull => _provider.GetRequiredService<T>();
-   public T? Get<T> () where T : notnull => _provider.GetService<T>();
-
-
-   internal TRule? GetRule<TRule, TEvent> () where TEvent : IEvent where TRule : class, IRule<TEvent>
+   internal object? GetTemplate (Type eventType)
    {
-      var descriptor = _components.FirstOrDefault(d =>
-         d.Category == ComponentCategory.Rule
-         && d.ComponentType == typeof(TRule)
-         && d.EventType == typeof(TEvent));
-      return Get<TRule>(descriptor);
-   }
-   internal PriorityQueue<object, int> GetEffects<TEvent> () where TEvent : IEvent
-   {
-      var effects = _components.Where(d =>
-         d.Category == ComponentCategory.Effect
-         && d.EventType == typeof(TEvent))
-         .Select(d => (
-            Effect: _provider.GetService(d.ComponentType)!,
-            Priority: int.MaxValue - (d.Effect_Priority ?? 0)
-         ));
-      return new PriorityQueue<object, int>(effects);
-   }
-   internal int GetPriorityFor<TEffect>()
-   {
-      return _components.FirstOrDefault(d => d.ComponentType == typeof(TEffect))?.Effect_Priority ?? 0;
-   }
-
-   internal object? GetTemplate(IEvent @event)
-   {
-      var templateType = typeof(IContextTemplate<>).MakeGenericType(@event.GetType());
-      var template = _provider.GetService(templateType);
+      var descriptor = FindTemplateFor(eventType);
+      if (descriptor is null) return null;
+      var template = _provider.GetService(descriptor.GenericType);
       return template;
    }
-   internal object? GetContract (IEvent @event)
+   internal object? GetContract (Type eventType)
    {
-      var contractType = typeof(IEventContract<>).MakeGenericType(@event.GetType());
-      var contract = _provider.GetService(contractType);
+      var descriptor = FindContractFor(eventType);
+      if (descriptor is null) return null;
+      var contract = _provider.GetService(descriptor.GenericType);
       return contract;
    }
-
-   private T? Get<T>(ComponentDescriptor? descriptor) where T : class
+   internal ICollection<(object Rule, RulePlacement Placement)> GetRules (Type eventType)
    {
-      if (descriptor is null)
-      {
-         return null!;
-      }
-      if (descriptor.ComponentInstance is not null)
-      {
-         return (T) descriptor.ComponentInstance;
-      }
-      return (T?) _provider.GetService(descriptor.ComponentType);
+      var ruleDescriptors = FindRulesFor(eventType);
+      if (!ruleDescriptors.Any()) return [];
+      return _provider.GetServices(ruleDescriptors.First().GenericType)
+         .Where(s => s is not null)
+         .Select(s => (s!, ruleDescriptors.First(d => d.ComponentType == s!.GetType()).Rule_Placement!.Value))
+         .ToList();
+   }
+   internal ICollection<(object Effect, int Priority)> GetEffects (Type eventType)
+   {
+      var effectDescriptors = FindEffectsFor(eventType);
+      if (!effectDescriptors.Any()) return [];
+      return _provider.GetServices(effectDescriptors.First().GenericType)
+         .Where(s => s is not null)
+         .Select(s => (s!, effectDescriptors.First(d => d.ComponentType == s!.GetType()).Effect_Priority!.Value))
+         .ToList();
+   }
+
+
+   private IEnumerable<ComponentDescriptor> FindRulesFor (Type eventType)
+   {
+      return _components.Where(d =>
+        d.Category == ComponentCategory.Rule &&
+        d.EventType == eventType);
+   }
+   private IEnumerable<ComponentDescriptor> FindEffectsFor (Type eventType)
+   {
+      return _components.Where(d =>
+        d.Category == ComponentCategory.Effect &&
+        d.EventType == eventType);
+   }
+   private ComponentDescriptor? FindContractFor (Type eventType)
+   {
+      return _components.FirstOrDefault(d =>
+        d.Category == ComponentCategory.Contract &&
+        d.EventType == eventType);
+   }
+   private ComponentDescriptor? FindTemplateFor (Type eventType)
+   {
+      return _components.FirstOrDefault(d =>
+        d.Category == ComponentCategory.Template &&
+        d.EventType == eventType);
    }
 }

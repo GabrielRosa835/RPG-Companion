@@ -38,17 +38,30 @@ internal class PluginManager
       return Descriptors;
    }
 
-   public Attempt Load (PluginDescriptor descriptor)
+   public Task<Attempt> Load (PluginDescriptor plugin)
+   {
+      if (plugin.Activated)
+      {
+         return Task.FromResult(Results.Success());
+      }
+      return LoadInternal(plugin);
+   }
+   public Task<Attempt> ForceLoad (PluginDescriptor plugin)
+   {
+      return LoadInternal(plugin);
+   }
+
+   internal static Task<Attempt> LoadInternal (PluginDescriptor plugin) => Task.Run(() =>
    {
       try
       {
-         var context = new AssemblyLoadContext(descriptor.Name, isCollectible: true);
-         var assembly = context.LoadFromAssemblyPath(descriptor.Path);
+         var context = new AssemblyLoadContext(plugin.Name, isCollectible: true);
+         var assembly = context.LoadFromAssemblyPath(plugin.Path);
 
          var systemType = assembly.GetTypes()
              .FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
 
-         if(!TryActivate(systemType, out IPlugin system))
+         if (!TryActivate(systemType, out IPlugin system))
          {
             return Results.Failure();
          }
@@ -82,11 +95,11 @@ internal class PluginManager
          var method = manifestType!.GetMethod(nameof(IInitializer<>.Initialize));
          method?.Invoke(initializer, [registry]);
 
-         descriptor.Assembly = assembly;
-         descriptor.System = system;
-         descriptor.Registry = registry;
-         descriptor.Provider = serviceProvider;
-         descriptor.Activated = true;
+         plugin.Assembly = assembly;
+         plugin.System = system;
+         plugin.Registry = registry;
+         plugin.Provider = serviceProvider;
+         plugin.Activated = true;
 
          return Results.Success();
       }
@@ -94,8 +107,8 @@ internal class PluginManager
       {
          return Results.Failure(e);
       }
-   }
-   
+   });
+
    private static bool TryActivate<T> (Type? type, out T instance)
    {
       if (type is null)
