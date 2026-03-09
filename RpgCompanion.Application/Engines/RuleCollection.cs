@@ -11,6 +11,15 @@ internal class RuleCollection
       _rules = new(rules);
    }
 
+   internal void SetValues(IEnumerable<ComponentDescriptor> rules)
+   {
+      _rules.Clear();
+      _rules.AddRange(rules);
+   }
+   internal void Clear()
+   {
+      _rules.Clear();
+   }
    internal ComponentDescriptor? FirstOrDefault()
    {
       return _rules.FirstOrDefault();

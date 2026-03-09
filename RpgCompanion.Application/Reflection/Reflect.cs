@@ -9,26 +9,32 @@ namespace RpgCompanion.Application.Reflection;
 
 internal class Reflect
 {
-   private Dictionary<Type, MethodInfo> _methods = [];
-   private Dictionary<Type, PropertyInfo> _properties = [];
+   private readonly Dictionary<Type, MethodInfo> _methods = [];
+   private readonly Dictionary<Type, PropertyInfo> _properties = [];
+   private readonly Timer _cleanupTimer;
 
-   public MethodInfo RuleApply(Type genericType)
+   internal Reflect()
+   {
+      _cleanupTimer = new Timer(Clear, this, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+   }
+
+   internal MethodInfo RuleApply(Type genericType)
    {
       return GetMethod(genericType, typeof(IRule<>), nameof(IRule<>.Apply));
    }
-   public MethodInfo EffectApply (Type genericType)
+   internal MethodInfo EffectApply (Type genericType)
    {
       return GetMethod(genericType, typeof(IEffect<>), nameof(IEffect<>.Apply));
    }
-   public MethodInfo TemplateBundle (Type genericType)
+   internal MethodInfo TemplateBundle (Type genericType)
    {
       return GetMethod(genericType, typeof(IContextTemplate<>), nameof(IContextTemplate<>.Bundle));
    }
-   public PropertyInfo ContractRequirements(Type genericType)
+   internal PropertyInfo ContractRequirements(Type genericType)
    {
       return GetProperty(genericType, typeof(IEventContract<>), nameof(IEventContract<>.Requirements));
    }
-   public PropertyInfo ContractOutputs (Type genericType)
+   internal PropertyInfo ContractOutputs (Type genericType)
    {
       return GetProperty(genericType, typeof(IEventContract<>), nameof(IEventContract<>.Outputs));
    }
@@ -60,5 +66,11 @@ internal class Reflect
       var property = genericType.GetProperty(propertyName)!;
       _properties.Add(genericType, property);
       return property;
+   }
+   private void Clear (object? state)
+   {
+      Reflect r = (Reflect) state!;
+      _methods.Clear();
+      _properties.Clear();
    }
 }
