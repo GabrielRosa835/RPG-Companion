@@ -20,16 +20,4 @@ internal class RuleCollection
    {
       _rules.Clear();
    }
-   internal ComponentDescriptor? FirstOrDefault()
-   {
-      return _rules.FirstOrDefault();
-   }
-   internal IEnumerable<ComponentDescriptor> BeforeEvent ()
-   {
-      return _rules.Where(r => r.Rule_Placement == RulePlacement.BeforeEvent);
-   }
-   internal IEnumerable<ComponentDescriptor> AfterEvent ()
-   {
-      return _rules.Where(r => r.Rule_Placement == RulePlacement.AfterEvent);
-   }
 }

@@ -5,7 +5,7 @@ using RpgCompanion.Core.Events.Producers;
 
 namespace RpgCompanion.DnD;
 
-public record DiceRoll(Dice Dice) : EventBase(nameof(DiceRoll)), IEventContract<DiceRoll>
+public record DiceRoll(Dice Dice) : EventBase(nameof(DiceRoll)), IContract<DiceRoll>
 {
    public static readonly ContextKey<Dice> PendingDice = new(nameof(PendingDice));
    public static readonly ContextKey<int> RollResult = new(nameof(RollResult));
@@ -16,7 +16,7 @@ public record DiceRoll(Dice Dice) : EventBase(nameof(DiceRoll)), IEventContract<
 
 public class DiceRollRule : IRule<DiceRoll>
 {
-   public DiceRoll Apply(IContextSnapshot context)
+   public DiceRoll Apply(ISnapshot context)
    {
       return new DiceRoll(new Dice.D20());
    }
@@ -36,7 +36,7 @@ public class DiceRollEffect : IEffect<DiceRoll>
 
 public class RollAppliesCheck : IRuleChecker<DiceRoll, DiceRollRule>
 {
-   public bool ShouldApply (IContextSnapshot context)
+   public bool ShouldApply (ISnapshot context)
    {
       throw new NotImplementedException();
    }

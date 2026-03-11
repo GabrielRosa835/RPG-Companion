@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Loader;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using RpgCompanion.Application.Reflection;
 using RpgCompanion.Core.Meta;
 
 using Utils.UnionTypes;
@@ -14,13 +14,7 @@ internal class PluginManager
    public IReadOnlyList<PluginDescriptor> Descriptors => _descriptors.AsReadOnly();
 
    public PluginDescriptor this[int index] => _descriptors[index];
-   public PluginDescriptor this[string name] => _descriptors.First(d => d.Name == name);
-
-   public bool TryGetPlugin (string name, out PluginDescriptor plugin)
-   {
-      plugin = _descriptors.FirstOrDefault(d => d.Name == name)!;
-      return plugin is not null;
-   }
+   public PluginDescriptor this[string name] => _descriptors.First(d => d.Resource == name);
 
    public IReadOnlyList<PluginDescriptor> FindPlugins (string pluginsFolder)
    {
@@ -31,7 +25,7 @@ internal class PluginManager
       _descriptors.AddRange(Directory.GetFiles(pluginsFolder, "*.dll", SearchOption.AllDirectories)
           .Select(dll => new PluginDescriptor
           {
-             Name = Path.GetFileNameWithoutExtension(dll),
+             Resource = Path.GetFileNameWithoutExtension(dll),
              Path = Path.GetFullPath(dll),
           })
           .Where(d => !_descriptors.Contains(d)));
@@ -55,48 +49,32 @@ internal class PluginManager
    {
       try
       {
-         var context = new AssemblyLoadContext(plugin.Name, isCollectible: true);
+         var context = new AssemblyLoadContext(plugin.Resource, isCollectible: true);
          var assembly = context.LoadFromAssemblyPath(plugin.Path);
 
-         var systemType = assembly.GetTypes()
-             .FirstOrDefault(t => typeof(IPlugin).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
+         var manifestType = assembly.GetTypes().FirstOrDefault(
+            t => t.Implements(typeof(IManifest)));
 
-         if (!TryActivate(systemType, out IPlugin system))
-         {
-            return Results.Failure();
-         }
-
-         var manifestType = assembly.GetTypes().FirstOrDefault(t =>
-         {
-            if (t.IsInterface || t.IsAbstract) return false;
-            return t.GetInterfaces().Any(i =>
-                   i.IsGenericType &&
-                   i.GetGenericTypeDefinition() == typeof(IManifest<>) &&
-                   i.GetGenericArguments()[0] == systemType);
-         });
-
-         if (!TryActivate(manifestType, out IManifest<IPlugin> manifest))
+         if (!TryActivate(manifestType, out IManifest manifest))
          {
             return Results.Failure();
          }
 
          var services = new ServiceCollection();
-         var registryCollection = new PluginBuilder(services);
+         var pluginBuilder = new PluginBuilder();
 
-         services.AddTransient(manifest.Initializer);
-
-         manifest.Setup(registryCollection);
+         manifest.Setup(pluginBuilder);
 
          var serviceProvider = services.BuildServiceProvider();
          var registry = new ComponentProvider(serviceProvider);
 
-         var initializer = serviceProvider.GetRequiredService(manifest.Initializer);
+         var initializer = serviceProvider.GetRequiredService(pluginBuilder);
 
          var method = manifestType!.GetMethod(nameof(IInitializer<>.Initialize));
          method?.Invoke(initializer, [registry]);
 
          plugin.Assembly = assembly;
-         plugin.System = system;
+         plugin.Identifier = system;
          plugin.Registry = registry;
          plugin.Provider = serviceProvider;
          plugin.Activated = true;

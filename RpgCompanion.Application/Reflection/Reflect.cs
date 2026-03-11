@@ -18,9 +18,17 @@ internal class Reflect
       _cleanupTimer = new Timer(Clear, this, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
    }
 
+   internal MethodInfo RuleShouldApply(Type genericType)
+   {
+      return GetMethod(genericType, typeof(IRule<>), nameof(IRule<>.ShouldApply));
+   }
    internal MethodInfo RuleApply(Type genericType)
    {
       return GetMethod(genericType, typeof(IRule<>), nameof(IRule<>.Apply));
+   }
+   internal MethodInfo EffectShouldApply (Type genericType)
+   {
+      return GetMethod(genericType, typeof(IEffect<>), nameof(IEffect<>.ShouldApply));
    }
    internal MethodInfo EffectApply (Type genericType)
    {
@@ -28,15 +36,15 @@ internal class Reflect
    }
    internal MethodInfo TemplateBundle (Type genericType)
    {
-      return GetMethod(genericType, typeof(IContextTemplate<>), nameof(IContextTemplate<>.Bundle));
+      return GetMethod(genericType, typeof(IPackager<>), nameof(IPackager<>.Pack));
    }
    internal PropertyInfo ContractRequirements(Type genericType)
    {
-      return GetProperty(genericType, typeof(IEventContract<>), nameof(IEventContract<>.Requirements));
+      return GetProperty(genericType, typeof(IContract<>), nameof(IContract<>.Requirements));
    }
    internal PropertyInfo ContractOutputs (Type genericType)
    {
-      return GetProperty(genericType, typeof(IEventContract<>), nameof(IEventContract<>.Outputs));
+      return GetProperty(genericType, typeof(IContract<>), nameof(IContract<>.Outputs));
    }
 
    private MethodInfo GetMethod(Type genericType, Type genericDefinition, string methodName)

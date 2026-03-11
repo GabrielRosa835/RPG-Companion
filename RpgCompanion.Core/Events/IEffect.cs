@@ -4,12 +4,15 @@ namespace RpgCompanion.Core.Events;
 
 public interface IEffect<in TEvent> where TEvent : IEvent
 {
+   bool ShouldApply(TEvent @event, IContext context);
    void Apply (TEvent @event, IContext context);
-   public static IEffect<TEvent> Of(Action<TEvent, IContext> apply) => new EffectWrapper<TEvent>(apply);
 }
 
-internal record EffectWrapper<TEvent> (Action<TEvent, IContext> apply) 
-   : IEffect<TEvent> where TEvent : IEvent
+public record EmptyEffect<TEvent> : IEffect<TEvent> where  TEvent : IEvent
 {
-   public void Apply (TEvent @event, IContext context) => apply(@event, context);
+   public bool ShouldApply(TEvent @event, IContext context) => true;
+   public void Apply(TEvent @event, IContext context)
+   {
+      Console.WriteLine($"{GetType().Name} applied for event {@event.GetType().Name}");
+   }
 }

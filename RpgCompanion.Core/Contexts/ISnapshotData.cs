@@ -1,6 +1,6 @@
 namespace RpgCompanion.Core.Contexts;
 
-public interface IReadonlyContextData
+public interface ISnapshotData
 {
    bool Contains<T> (ContextKey<T> key);
    T Get<T> (ContextKey<T> key);

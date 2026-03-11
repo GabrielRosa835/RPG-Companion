@@ -17,7 +17,9 @@ internal class ComponentProvider
 
    internal ComponentDescriptor? GetTemplate (Type eventType)
    {
-      var descriptor = FindTemplateFor(eventType);
+      var descriptor = _components.FirstOrDefault(d =>
+         d.Category == ComponentCategory.Packager &&
+         d.EventType == eventType);
       if (descriptor is null) return null;
       var template = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = template;
@@ -25,54 +27,38 @@ internal class ComponentProvider
    }
    internal ComponentDescriptor? GetContract (Type eventType)
    {
-      var descriptor = FindContractFor(eventType);
+      var descriptor = _components.FirstOrDefault(d =>
+         d.Category == ComponentCategory.Contract &&
+         d.EventType == eventType);
       if (descriptor is null) return null;
       var contract = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = contract;
       return descriptor;
    }
+   internal ComponentDescriptor? GetEffect (Type eventType)
+   {
+      var descriptor = _components.FirstOrDefault(d =>
+         d.Category == ComponentCategory.Effect &&
+         d.EventType == eventType);
+      if (descriptor is null) return null;
+      var effect = _provider.GetRequiredService(descriptor.GenericType);
+      descriptor.Instance = effect;
+      return descriptor;
+   }
    internal IEnumerable<ComponentDescriptor> GetRules (Type eventType)
    {
-      var ruleDescriptors = FindRulesFor(eventType);
-      if (!ruleDescriptors.Any()) return [];
+      var ruleDescriptors = _components.Where(d =>
+         d.Category == ComponentCategory.Rule &&
+         d.EventType == eventType).ToArray();
+      if (ruleDescriptors.Length > 0) return [];
       return _provider.GetServices(ruleDescriptors.First().GenericType)
          .Where(s => s is not null)
-         .Select (s => ruleDescriptors.First(d => d.ComponentType == s!.GetType()))
+         .Select (s =>
+         {
+            var descriptor = ruleDescriptors.First(d => d.ComponentType == s!.GetType());
+            descriptor.Instance = s!;
+            return descriptor;
+         })
          .ToList();
-   }
-   internal IEnumerable<ComponentDescriptor> GetEffects (Type eventType)
-   {
-      var effectDescriptors = FindEffectsFor(eventType);
-      if (!effectDescriptors.Any()) return [];
-      return _provider.GetServices(effectDescriptors.First().GenericType)
-         .Where(s => s is not null)
-         .Select(s => effectDescriptors.First(d => d.ComponentType == s!.GetType()))
-         .ToList();
-   }
-
-
-   private IEnumerable<ComponentDescriptor> FindRulesFor (Type eventType)
-   {
-      return _components.Where(d =>
-        d.Category == ComponentCategory.Rule &&
-        d.EventType == eventType);
-   }
-   private IEnumerable<ComponentDescriptor> FindEffectsFor (Type eventType)
-   {
-      return _components.Where(d =>
-        d.Category == ComponentCategory.Effect &&
-        d.EventType == eventType);
-   }
-   private ComponentDescriptor? FindContractFor (Type eventType)
-   {
-      return _components.FirstOrDefault(d =>
-        d.Category == ComponentCategory.Contract &&
-        d.EventType == eventType);
-   }
-   private ComponentDescriptor? FindTemplateFor (Type eventType)
-   {
-      return _components.FirstOrDefault(d =>
-        d.Category == ComponentCategory.Template &&
-        d.EventType == eventType);
    }
 }

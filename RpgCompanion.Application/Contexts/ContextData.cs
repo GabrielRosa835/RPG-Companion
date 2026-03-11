@@ -2,7 +2,7 @@ using RpgCompanion.Core.Contexts;
 
 namespace RpgCompanion.Core.Engine;
 
-internal class ContextData : IContextData, IReadonlyContextData
+internal class ContextData : IContextData, ISnapshotData
 {
     private readonly Dictionary<string, dynamic> _data = new();
     

@@ -3,12 +3,9 @@
 public interface IEvent
 {
    string Name { get; }
-   public static readonly IEvent Empty = new EmptyEvent();
+   int Priority { get; }
 }
 
-internal readonly record struct EmptyEvent : IEvent
-{
-   public string Name => nameof(EmptyEvent);
-}
+public record EmptyEvent() : EventBase(nameof(EmptyEvent), 0);
 
-public abstract record EventBase(string Name) : IEvent;
+public abstract record EventBase(string Name, int Priority) : IEvent;

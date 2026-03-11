@@ -2,16 +2,22 @@
 
 namespace RpgCompanion.Core.Events.Producers;
 
-public interface IRule<out TEvent> where TEvent : IEvent
+public interface IRule<in TEvent> where TEvent : IEvent
 {
-   TEvent Apply (IContextSnapshot context);
-
-   public static IRule<TEvent> Of(Func<IContextSnapshot, TEvent> apply) => new RuleWrapper<TEvent>(apply);
+   bool ShouldApply(ISnapshot context);
+   IEvent Apply (ISnapshot context);
 }
 
-internal record RuleWrapper<TEvent> (Func<IContextSnapshot, TEvent> apply) : IRule<TEvent> where TEvent : IEvent
+public record EmptyRule<TEvent> : IRule<TEvent> where TEvent : IEvent
 {
-   public TEvent Apply(IContextSnapshot context) => apply(context);
+   public bool ShouldApply(ISnapshot context)
+   {
+      return true;
+   }
+
+   public IEvent Apply(ISnapshot context)
+   {
+      Console.WriteLine($"{GetType().Name} applied");
+      return new EmptyEvent();
+   }
 }
-
-

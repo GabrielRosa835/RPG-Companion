@@ -1,9 +1,6 @@
 ﻿using System.Reflection;
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Utils.UnionTypes;
 
 namespace RpgCompanion.Application;
 
@@ -13,7 +10,7 @@ public static class Program
    {
       var builder = Host.CreateApplicationBuilder(args);
 
-      builder.Services.AddSingleton<PluginManager>();
+      builder.Services.AddAppServices();
 
       var host = builder.Build();
       
@@ -24,20 +21,5 @@ public static class Program
       
       string pluginsFolder = Path.Join(Path.GetDirectoryName(executingAssembly), "plugins");
       Console.WriteLine(pluginsFolder);
-      
-      pluginManager.FindPlugins(pluginsFolder);
-      Console.WriteLine(pluginManager[0].Name);
-      
-      Console.WriteLine(pluginManager[0].System);
-      var attempt = pluginManager.Load(pluginManager[0]);
-
-      if (attempt.TryGetFailure(out var failure))
-      {
-         Console.WriteLine(failure);
-      }
-      else
-      {
-         Console.WriteLine(pluginManager[0].System.Name);
-      }
    }
 }

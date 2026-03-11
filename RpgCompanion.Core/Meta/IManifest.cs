@@ -2,8 +2,7 @@
 
 namespace RpgCompanion.Core.Meta;
 
-public interface IManifest<out TSystem> where TSystem : IPlugin
+public interface IManifest
 {
-   Type Initializer { get; }
    void Setup(IPluginBuilder builder);
 }

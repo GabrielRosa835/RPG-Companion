@@ -5,8 +5,8 @@ namespace RpgCompanion.Core.Contexts;
 /// <summary>
 /// Readonly context for Rules
 /// </summary>
-public interface IContextSnapshot
+public interface ISnapshot
 {
-   IReadonlyContextData Data { get; }
+   ISnapshotData Data { get; }
    IRegistry Registry { get; }
 }
