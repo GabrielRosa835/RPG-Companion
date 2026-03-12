@@ -13,17 +13,21 @@ public static class Canva
    public record TestEffect : EmptyEffect<Event>;
    public record TestContract : EmptyContract<Event>;
    public record TestPackager : EmptyPackager<Event>;
-   public record Event : EmptyEvent;
+   public record Event : IEvent;
    public record TestInitializer : EmptyInitializer;
-   public static void Test()
+   public static void Test ()
    {
       PluginBuilder builder = new PluginBuilder();
 
-      builder.For<Event>()
-         .AddRule<TestRule>()
-         .AddEffect<TestEffect>()
-         .AddContract<TestContract>()
-         .AddPackager<TestPackager>();
+      builder.AddEvent<Event>()
+         .WithName(nameof(Event))
+         .WithPriority(1)
+         .WithPriority(EventPriorities.High)
+         .WithComponents()
+            .AddRule<TestRule>()
+            .AddEffect<TestEffect>()
+            .AddContract<TestContract>()
+            .AddPackager<TestPackager>();
       builder.WithInitialization(r => { })
          .WithInitializer<TestInitializer>()
          .WithName("Test")
@@ -34,38 +38,39 @@ public static class Canva
 internal class PluginBuilder
 {
    private readonly ComponentCollection _components = new();
-      
+
    internal ComponentProvider Build () => _components.BuildProvider();
 
-   internal EventBuilder<TEvent> For<TEvent>() where TEvent : IEvent
+   internal EventBuilder<TEvent> AddEvent<TEvent> () where TEvent : IEvent
    {
-      return new EventBuilder<TEvent>(_components, this);
+      var eventDescriptor = _components.AddEvent<TEvent>();
+      return new EventBuilder<TEvent>(eventDescriptor, _components);
    }
 
-   private Type? _initializerType;
-   private Action<IRegistry>? _initialization;
-   private string? _pluginName;
-   private string? _pluginVersion;
-   
-   public PluginBuilder WithInitializer<TInitializer>()
+   internal Type? InitializerType { get; set; }
+   internal Action<IRegistry>? Initialization { get; set; }
+   internal string? PluginName { get; set; }
+   internal string? PluginVersion { get; set; }
+
+   public PluginBuilder WithInitializer<TInitializer> ()
    {
-      _initializerType = typeof(TInitializer);
+      InitializerType = typeof(TInitializer);
       return this;
    }
-   public PluginBuilder WithName(string name)
+   public PluginBuilder WithName (string name)
    {
-      _pluginName = name;
+      PluginName = name;
       return this;
    }
-   public PluginBuilder WithVersion(string version)
+   public PluginBuilder WithVersion (string version)
    {
-      _pluginVersion = version;
+      PluginVersion = version;
       return this;
    }
 
-   public PluginBuilder WithInitialization(Action<IRegistry> initialization)
+   public PluginBuilder WithInitialization (Action<IRegistry> initialization)
    {
-      _initialization = initialization;
+      Initialization = initialization;
       return this;
    }
 }

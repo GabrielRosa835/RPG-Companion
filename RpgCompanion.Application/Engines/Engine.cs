@@ -1,8 +1,8 @@
-﻿using RpgCompanion.Application.Engines;
-using RpgCompanion.Application.Reflection;
+﻿using RpgCompanion.Application.Reflection;
 using RpgCompanion.Application.Services;
 using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Events;
+
 using Utils.Extensions;
 using Utils.UnionTypes;
 
@@ -35,9 +35,9 @@ internal class Engine
       var eventType = @event.GetType();
       var context = new Context(plugin);
 
-      var template = plugin.Registry.GetTemplate(eventType);
+      var template = plugin.Registry.GetPackager(eventType);
       var contract = plugin.Registry.GetContract(eventType);
-      var effect   = plugin.Registry.GetEffect(eventType);
+      var effect = plugin.Registry.GetEffect(eventType);
       _rules.Set(plugin.Registry.GetRules(eventType));
 
       // Execution

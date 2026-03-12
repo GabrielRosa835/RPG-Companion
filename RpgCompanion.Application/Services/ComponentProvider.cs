@@ -15,11 +15,11 @@ internal class ComponentProvider
       _provider = provider;
    }
 
-   internal ComponentDescriptor? GetTemplate (Type eventType)
+   internal ComponentDescriptor? GetPackager (Type eventType)
    {
       var descriptor = _components.FirstOrDefault(d =>
-         d.Category == ComponentCategory.Packager &&
-         d.EventType == eventType);
+         d is PackagerDescriptor pd &&
+         pd.EventType == eventType);
       if (descriptor is null) return null;
       var template = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = template;
@@ -28,8 +28,8 @@ internal class ComponentProvider
    internal ComponentDescriptor? GetContract (Type eventType)
    {
       var descriptor = _components.FirstOrDefault(d =>
-         d.Category == ComponentCategory.Contract &&
-         d.EventType == eventType);
+         d is ContractDescriptor cd &&
+         cd.EventType == eventType);
       if (descriptor is null) return null;
       var contract = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = contract;
@@ -38,8 +38,8 @@ internal class ComponentProvider
    internal ComponentDescriptor? GetEffect (Type eventType)
    {
       var descriptor = _components.FirstOrDefault(d =>
-         d.Category == ComponentCategory.Effect &&
-         d.EventType == eventType);
+         d is EffectDescriptor ed &&
+         ed.EventType == eventType);
       if (descriptor is null) return null;
       var effect = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = effect;
@@ -48,8 +48,8 @@ internal class ComponentProvider
    internal IEnumerable<ComponentDescriptor> GetRules (Type eventType)
    {
       var ruleDescriptors = _components.Where(d =>
-         d.Category == ComponentCategory.Rule &&
-         d.EventType == eventType).ToArray();
+         d is RuleDescriptor rd &&
+         rd.EventType == eventType).ToArray();
       if (ruleDescriptors.Length > 0) return [];
       return _provider.GetServices(ruleDescriptors.First().GenericType)
          .Where(s => s is not null)

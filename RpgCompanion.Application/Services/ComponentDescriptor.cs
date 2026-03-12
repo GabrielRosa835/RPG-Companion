@@ -1,21 +1,39 @@
-﻿using RpgCompanion.Core.Meta;
+﻿namespace RpgCompanion.Application.Services;
 
-namespace RpgCompanion.Application.Services;
-
-internal class ComponentDescriptor
+internal abstract class ComponentDescriptor
 {
    public object Instance { get; set; } = default!;
    public Type ComponentType { get; set; } = default!;
-   public Type? EventType { get; set; }
    public Type GenericType { get; set; } = default!;
-   public ComponentCategory Category { get; set; }
 }
 
-public enum ComponentCategory
+internal class CustomDescriptor : ComponentDescriptor
 {
-   Custom,
-   Rule,
-   Effect,
-   Contract,
-   Packager,
+
+}
+
+internal class EventDescriptor : ComponentDescriptor
+{
+   public string? DisplayName { get; set; }
+   public int Priority { get; set; }
+}
+
+internal class RuleDescriptor : ComponentDescriptor
+{
+   public Type EventType { get; set; } = default!;
+}
+
+internal class EffectDescriptor : ComponentDescriptor
+{
+   public Type EventType { get; set; } = default!;
+}
+
+internal class ContractDescriptor : ComponentDescriptor
+{
+   public Type EventType { get; set; } = default!;
+}
+
+internal class PackagerDescriptor : ComponentDescriptor
+{
+   public Type EventType { get; set; } = default!;
 }

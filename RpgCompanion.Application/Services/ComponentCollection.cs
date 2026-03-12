@@ -1,12 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-using RpgCompanion.Core.Meta;
-
-using System.Collections;
 using RpgCompanion.Core.Contexts;
 using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Events;
 using RpgCompanion.Core.Events.Producers;
+
+using System.Collections;
 
 namespace RpgCompanion.Application.Services;
 
@@ -26,64 +25,71 @@ internal class ComponentCollection : IEnumerable<ComponentDescriptor>
       return descriptor;
    }
 
-   internal ComponentDescriptor AddRule<TRule, TEvent> ()
+   internal EventDescriptor AddEvent<TEvent> ()
+      where TEvent : IEvent
+   {
+      var descriptor = new EventDescriptor
+      {
+         ComponentType = typeof(TEvent),
+         GenericType = typeof(IEvent),
+      };
+      _components.Add(descriptor);
+      return descriptor;
+   }
+   internal RuleDescriptor AddRule<TRule, TEvent> ()
       where TEvent : IEvent
       where TRule : IRule<TEvent>
    {
-      var descriptor = new ComponentDescriptor
+      var descriptor = new RuleDescriptor
       {
          ComponentType = typeof(TRule),
          GenericType = typeof(IRule<TEvent>),
          EventType = typeof(TEvent),
-         Category = ComponentCategory.Rule,
       };
       _services.AddTransient(descriptor.ComponentType);
       _services.AddTransient(descriptor.GenericType, descriptor.ComponentType);
       _components.Add(descriptor);
       return descriptor;
    }
-   internal ComponentDescriptor AddEffect<TEffect, TEvent> ()
+   internal EffectDescriptor AddEffect<TEffect, TEvent> ()
       where TEvent : IEvent
       where TEffect : IEffect<TEvent>
    {
-      var descriptor = new ComponentDescriptor
+      var descriptor = new EffectDescriptor
       {
          ComponentType = typeof(TEffect),
          GenericType = typeof(IEffect<TEvent>),
          EventType = typeof(TEvent),
-         Category = ComponentCategory.Effect,
       };
       _services.AddTransient(descriptor.ComponentType);
       _services.AddTransient(descriptor.GenericType, descriptor.ComponentType);
       _components.Add(descriptor);
       return descriptor;
    }
-   internal ComponentDescriptor AddContract<TContract, TEvent> ()
+   internal ContractDescriptor AddContract<TContract, TEvent> ()
       where TEvent : IEvent
       where TContract : IContract<TEvent>
    {
-      var descriptor = new ComponentDescriptor
+      var descriptor = new ContractDescriptor
       {
          ComponentType = typeof(TContract),
          GenericType = typeof(IContract<TEvent>),
          EventType = typeof(TEvent),
-         Category = ComponentCategory.Contract,
       };
       _services.AddTransient(descriptor.ComponentType);
       _services.AddTransient(descriptor.GenericType, descriptor.ComponentType);
       _components.Add(descriptor);
       return descriptor;
    }
-   internal ComponentDescriptor AddPackager<TPackager, TEvent> ()
+   internal PackagerDescriptor AddPackager<TPackager, TEvent> ()
       where TEvent : IEvent
       where TPackager : IPackager<TEvent>
    {
-      var descriptor = new ComponentDescriptor
+      var descriptor = new PackagerDescriptor
       {
          ComponentType = typeof(TPackager),
          GenericType = typeof(IPackager<TEvent>),
          EventType = typeof(TEvent),
-         Category = ComponentCategory.Packager,
       };
       _services.AddTransient(descriptor.ComponentType);
       _services.AddTransient(descriptor.GenericType, descriptor.ComponentType);
