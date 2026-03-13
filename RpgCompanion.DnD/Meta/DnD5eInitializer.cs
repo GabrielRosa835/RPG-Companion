@@ -3,7 +3,7 @@ using RpgCompanion.Core.Meta;
 
 namespace RpgCompanion.DnD.Meta;
 
-internal class DnD5eInitializer : IInitializer<DnD5e>
+internal class DnD5eInitializer : IInitializer
 {
    public void Initialize (IRegistry registry)
    {

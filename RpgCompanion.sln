@@ -16,8 +16,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Core", "RpgCom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "RpgCompanion.DnD\RpgCompanion.DnD.csproj", "{33326DBD-BC78-F8AC-454E-60FD2204602F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Example", "RpgCompanion.Example\RpgCompanion.Example.csproj", "{11C61314-2FC2-4288-98CD-79795B626178}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,10 +38,6 @@ Global
 		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{11C61314-2FC2-4288-98CD-79795B626178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11C61314-2FC2-4288-98CD-79795B626178}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11C61314-2FC2-4288-98CD-79795B626178}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11C61314-2FC2-4288-98CD-79795B626178}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

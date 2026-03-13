@@ -13,7 +13,6 @@ internal class PluginDescriptor : IEquatable<PluginDescriptor>
     internal PluginIdentifier Identifier { get; set; } = default!;
     internal Assembly Assembly { get; set; } = default!;
     internal ComponentProvider Registry { get; set; } = default!;
-    internal IServiceProvider Provider { get; set; } = default!;
     
     public bool Equals(PluginDescriptor? other) => Resource == other?.Resource;
     public override bool Equals(object? obj) => obj is  PluginDescriptor other && Equals(other);
@@ -21,4 +20,4 @@ internal class PluginDescriptor : IEquatable<PluginDescriptor>
     public override string ToString() => Activated ? Identifier.ToString() : Resource;
 }
 
-internal record PluginIdentifier(string Name, string Version);
+internal record PluginIdentifier(string? Name, string? Version);

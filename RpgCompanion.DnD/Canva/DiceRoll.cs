@@ -5,46 +5,14 @@ using RpgCompanion.Core.Events.Producers;
 
 namespace RpgCompanion.DnD;
 
-public record DiceRoll(Dice Dice) : EventBase(nameof(DiceRoll)), IContract<DiceRoll>
-{
-   public static readonly ContextKey<Dice> PendingDice = new(nameof(PendingDice));
-   public static readonly ContextKey<int> RollResult = new(nameof(RollResult));
-   
-   public IEnumerable<ContextKey> Requirements => [PendingDice];
-   public IEnumerable<ContextKey> Outputs => [RollResult];
-}
-
-public class DiceRollRule : IRule<DiceRoll>
-{
-   public DiceRoll Apply(ISnapshot context)
-   {
-      return new DiceRoll(new Dice.D20());
-   }
-   public bool ShouldApply (IContext context) => true;
-}
+public record DiceRoll(Dice Dice, IEvent Next) : IEvent;
 
 public class DiceRollEffect : IEffect<DiceRoll>
 {
-   public void Apply(DiceRoll @event, IContext context)
+   public void Apply(DiceRoll diceRollEvent, IContext context)
    {
-      var dice = context.Data.Get(DiceRoll.PendingDice);
-      int result = dice.Roll();
-      context.Data.Set(DiceRoll.RollResult, result);
+      int result = diceRollEvent.Dice.Roll();
+      context.Raise(diceRollEvent);
    }
    public bool ShouldApply (DiceRoll @event, IContext context) => true;
-}
-
-public class RollAppliesCheck : IRuleChecker<DiceRoll, DiceRollRule>
-{
-   public bool ShouldApply (ISnapshot context)
-   {
-      throw new NotImplementedException();
-   }
-}
-public class ShouldRollCheck : IEffectChecker<DiceRoll, DiceRollEffect>
-{
-   public bool ShouldApply (DiceRoll @event, IContext context)
-   {
-      throw new NotImplementedException();
-   }
 }

@@ -1,9 +1,6 @@
-﻿using RpgCompanion.Application.Reflection;
-using RpgCompanion.Application.Services;
+﻿using RpgCompanion.Application.Engines;
+using RpgCompanion.Application.Reflection;
 using RpgCompanion.Core.Engine;
-using RpgCompanion.Core.Events;
-
-using Utils.Extensions;
 using Utils.UnionTypes;
 
 namespace RpgCompanion.Application;
@@ -11,11 +8,10 @@ namespace RpgCompanion.Application;
 internal class Engine
 {
    private readonly PluginManager _pluginManager = default!;
-   private readonly ContextValidator _validator = default!;
    private readonly Reflect _reflect = default!;
+   private readonly RuleCollection _rules = new();
    
-   private readonly List<ComponentDescriptor> _rules = default!;
-   private readonly EventQueue _queue = default!;
+   internal readonly EventQueue _queue = new();
 
    public async Task Execute(PluginDescriptor plugin)
    {
@@ -25,58 +21,65 @@ internal class Engine
       }
 
       // Preparation
-
       if (await _pluginManager.Load(plugin).IsFailure())
       {
          return;
       }
+      var context = new Context(this, plugin);
+      var eventDesc = _queue.Dequeue();
+      var templateDesc = plugin.Registry.GetPackagerDescriptorFor(eventDesc.ComponentType);
+      var contractDesc = plugin.Registry.GetContractDescriptorFor(eventDesc.ComponentType);
+      var effectDesc = plugin.Registry.GetEffectDescriptorFor(eventDesc.ComponentType);
+      _rules.SetValues(plugin.Registry.GetRulesDescriptorsFor(eventDesc.ComponentType));
 
-      var @event = _queue.Dequeue();
-      var eventType = @event.GetType();
-      var context = new Context(plugin);
-
-      var template = plugin.Registry.GetPackager(eventType);
-      var contract = plugin.Registry.GetContract(eventType);
-      var effect = plugin.Registry.GetEffect(eventType);
-      _rules.Set(plugin.Registry.GetRules(eventType));
-
-      // Execution
-
-      if (template is not null)
+      // Packager-Pack
+      if (templateDesc is not null)
       {
-         _reflect.TemplateBundle(template.GenericType).Invoke(template.Instance, [context]);
+         _reflect.Packagers.Pack(templateDesc, eventDesc.Instance, context);
       }
-
-      foreach (var rule in _rules)
+      // Before-Rules
+      foreach (var ruleDesc in _rules.AllBefore)
       {
-         bool shouldApply = _reflect.RuleShouldApply(rule.GenericType).Invoke(rule, [context])!.As<bool>();
-         if (!shouldApply) continue;
-         var applied = _reflect.RuleApply(rule.GenericType).Invoke(rule, [context])!.As<IEvent>();
-         _queue.Enqueue(applied);
+         if (!_reflect.Rules.ShouldApply(ruleDesc, context)) continue;
+         var event2 = _reflect.Rules.Apply(ruleDesc, context);
+         var event2Desc = plugin.Registry.GetEventDescriptor(event2);
+         _queue.Enqueue(event2Desc);
       }
-
-      if (contract is not null)
+      // Contract-Requirements
+      if (contractDesc is not null)
       {
-         _validator.ValidateInputs(contract, context);
+         foreach (var key in _reflect.Contracts.Requirements(contractDesc))
+         {
+            if (!context._data.Contains(key))
+            {
+               throw new ContractViolationException($"Event '{contractDesc.EventType.Name}' missing input: {key}");
+            }
+         }
       }
-      if (effect is not null)
+      // Effect-Apply
+      if (effectDesc is not null)
       {
-         _reflect.EffectApply(effect.GenericType).Invoke(effect, [@event, context]);
+         _reflect.Effects.Apply(effectDesc, eventDesc.Instance, context);
       }
-      if (contract is not null)
+      // Contract-Outputs
+      if (contractDesc is not null)
       {
-         _validator.ValidateOutputs(contract, context);
+         foreach (var key in _reflect.Contracts.Outputs(contractDesc))
+         {
+            if (!context._data.Contains(key))
+            {
+               throw new ContractViolationException($"Event '{contractDesc.EventType.Name}' failed to produce output: {key}");
+            }
+         }
       }
-
-      foreach (var rule in _rules)
+      // After-Rules
+      foreach (var ruleDesc in _rules.AllAfter)
       {
-         bool shouldApply = _reflect.RuleShouldApply(rule.GenericType).Invoke(rule, [context])!.As<bool>();
-         if (!shouldApply) continue;
-         var applied = _reflect.RuleApply(rule.GenericType).Invoke(rule, [context])!.As<IEvent>();
-         _queue.Enqueue(applied);
+         if (!_reflect.Rules.ShouldApply(ruleDesc, context)) continue;
+         var event2 = _reflect.Rules.Apply(ruleDesc, context);
+         var event2Desc = plugin.Registry.GetEventDescriptor(event2);
+         _queue.Enqueue(event2Desc);
       }
-
-      // Cleanup
 
       _rules.Clear();
    }

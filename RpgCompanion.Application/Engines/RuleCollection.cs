@@ -4,14 +4,14 @@ namespace RpgCompanion.Application.Engines;
 
 internal class RuleCollection
 {
-   internal readonly List<ComponentDescriptor> _rules;
+   internal readonly List<RuleDescriptor> _rules = [];
 
-   public RuleCollection (IEnumerable<ComponentDescriptor> rules)
-   {
-      _rules = new(rules);
-   }
-
-   internal void SetValues(IEnumerable<ComponentDescriptor> rules)
+   internal IEnumerable<RuleDescriptor> AllBefore => _rules
+      .Where(d => d.Ordering.HasFlag(RuleOrdering.Before));
+   internal IEnumerable<RuleDescriptor> AllAfter => _rules
+      .Where(d => d.Ordering.HasFlag(RuleOrdering.After));
+   
+   internal void SetValues(IEnumerable<RuleDescriptor> rules)
    {
       _rules.Clear();
       _rules.AddRange(rules);

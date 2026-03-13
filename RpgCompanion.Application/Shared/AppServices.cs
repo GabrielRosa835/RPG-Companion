@@ -10,7 +10,6 @@ public static class AppServices
     public static void AddAppServices(this IServiceCollection services)
     {
         services.AddSingleton<PluginManager>();
-        services.AddSingleton<ContextValidator>();
         services.AddSingleton<Reflect>();
     }
 }

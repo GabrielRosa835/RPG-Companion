@@ -1,19 +1,29 @@
-﻿using RpgCompanion.Core.Engine;
-using RpgCompanion.Core.Events;
-using RpgCompanion.Core.Events.Producers;
+﻿using RpgCompanion.Application;
+using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Meta;
-using RpgCompanion.DnD.Meta;
 
 namespace RpgCompanion.DnD;
 
-internal class DnD5eManifest : IManifest<DnD5e>
+internal class DnD5eManifest : IManifest
 {
-   public Type Initializer => typeof(DnD5eInitializer);
-
-   public void Setup (IPluginBuilder collection)
-   {
-      collection.Add<IRule<DiceRoll>, DiceRollRule>();
-      collection.Add<IEffect<DiceRoll>, DiceRollEffect>();
-   }
-
+    public void Setup(IPluginBuilder builder)
+    {
+        builder.WithName("D&D 5e")
+            .WithInitialization(_ => Console.WriteLine(nameof(DnD5eManifest)))
+            .WithVersion("1.0.0");
+        builder.AddEvent<DiceRoll>()
+            .WithPriority(EventPriorities.Medium)
+            .WithName("dice-roll")
+            .WithComponents()
+                .AddEffect<DiceRollEffect>();
+        builder.AddEvent<AttackAction>()
+            .WithPriority(EventPriorities.High)
+            .WithComponents()
+                .AddEffect<AttackActionEffect>();
+        builder.AddEvent<Damage>()
+            .WithPriority(1000)
+            .WithName("damage")
+            .WithComponents()
+                .AddEffect<DamageEffect>();
+    }
 }

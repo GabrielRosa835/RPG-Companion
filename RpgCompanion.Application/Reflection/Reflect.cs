@@ -4,10 +4,11 @@ using RpgCompanion.Core.Events;
 using RpgCompanion.Core.Events.Producers;
 
 using System.Reflection;
+using RpgCompanion.Application.Services;
 
 namespace RpgCompanion.Application.Reflection;
 
-internal class Reflect
+internal class Reflect : IReflect, IReflectEffect, IReflectContract, IReflectPackager
 {
    private readonly Dictionary<Type, MethodInfo> _methods = [];
    private readonly Dictionary<Type, PropertyInfo> _properties = [];
@@ -18,58 +19,66 @@ internal class Reflect
       _cleanupTimer = new Timer(Clear, this, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
    }
 
-   internal MethodInfo RuleShouldApply(Type genericType)
+   public IReflect Rules => this;
+   public IReflectEffect Effects => this;
+   public IReflectContract Contracts => this;
+   public IReflectPackager Packagers => this;
+
+   #region Implementations
+   
+   public bool ShouldApply(RuleDescriptor descriptor, ISnapshot snapshot)
    {
-      return GetMethod(genericType, typeof(IRule<>), nameof(IRule<>.ShouldApply));
+      return GetMethod(descriptor.GenericType, nameof(IRule<>.ShouldApply))
+         .Invoke(descriptor.Instance, [snapshot])!.As<bool>();
    }
-   internal MethodInfo RuleApply(Type genericType)
+   public IEvent Apply(RuleDescriptor descriptor, ISnapshot snapshot)
    {
-      return GetMethod(genericType, typeof(IRule<>), nameof(IRule<>.Apply));
+      return GetMethod(descriptor.GenericType, nameof(IRule<>.Apply))
+         .Invoke(descriptor.Instance, [snapshot])!.As<IEvent>();
    }
-   internal MethodInfo EffectShouldApply (Type genericType)
+   public bool ShouldApply (EffectDescriptor descriptor, IEvent @event, IContext context)
    {
-      return GetMethod(genericType, typeof(IEffect<>), nameof(IEffect<>.ShouldApply));
+      return GetMethod(descriptor.GenericType, nameof(IEffect<>.ShouldApply))
+         .Invoke(descriptor.Instance, [@event, context])!.As<bool>();
    }
-   internal MethodInfo EffectApply (Type genericType)
+   public void Apply (EffectDescriptor descriptor, IEvent @event, IContext context)
    {
-      return GetMethod(genericType, typeof(IEffect<>), nameof(IEffect<>.Apply));
+      GetMethod(descriptor.GenericType, nameof(IEffect<>.Apply))
+         .Invoke(descriptor.Instance, [@event, context]);
    }
-   internal MethodInfo TemplateBundle (Type genericType)
+   public void Pack (PackagerDescriptor descriptor, IEvent @event, IContext context)
    {
-      return GetMethod(genericType, typeof(IPackager<>), nameof(IPackager<>.Pack));
+      GetMethod(descriptor.GenericType, nameof(IPackager<>.Pack))
+         .Invoke(descriptor.Instance, [@event, context]);
    }
-   internal PropertyInfo ContractRequirements(Type genericType)
+   public IEnumerable<ContextKey> Requirements(ContractDescriptor descriptor)
    {
-      return GetProperty(genericType, typeof(IContract<>), nameof(IContract<>.Requirements));
+      return GetProperty(descriptor.GenericType, nameof(IContract<>.Requirements))!
+         .GetValue(descriptor.Instance)!.As<IEnumerable<ContextKey>>();
    }
-   internal PropertyInfo ContractOutputs (Type genericType)
+   public IEnumerable<ContextKey> Outputs (ContractDescriptor descriptor)
    {
-      return GetProperty(genericType, typeof(IContract<>), nameof(IContract<>.Outputs));
+      return GetProperty(descriptor.GenericType, nameof(IContract<>.Outputs))!
+         .GetValue(descriptor.Instance)!.As<IEnumerable<ContextKey>>();
    }
 
-   private MethodInfo GetMethod(Type genericType, Type genericDefinition, string methodName)
+   #endregion
+   
+   private MethodInfo GetMethod(Type genericType, string methodName)
    {
       if (_methods.TryGetValue(genericType, out var existant))
       {
          return existant;
       }
-      if (!genericType.GetGenericTypeDefinition().IsAssignableTo(genericDefinition))
-      {
-         throw new InvalidOperationException();
-      }
       var method = genericType.GetMethod(methodName)!;
       _methods.Add(genericType, method);
       return method;
    }
-   private PropertyInfo GetProperty (Type genericType, Type genericDefinition, string propertyName)
+   private PropertyInfo GetProperty (Type genericType, string propertyName)
    {
       if (_properties.TryGetValue(genericType, out var existant))
       {
          return existant;
-      }
-      if (!genericType.GetGenericTypeDefinition().IsAssignableTo(genericDefinition))
-      {
-         throw new InvalidOperationException();
       }
       var property = genericType.GetProperty(propertyName)!;
       _properties.Add(genericType, property);

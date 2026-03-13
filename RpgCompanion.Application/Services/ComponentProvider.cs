@@ -1,55 +1,73 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-
+using RpgCompanion.Application.Reflection;
 using RpgCompanion.Application.Services;
+using RpgCompanion.Core.Engine;
+using RpgCompanion.Core.Events;
 
 namespace RpgCompanion.Application;
 
-internal class ComponentProvider
+internal class ComponentProvider : IRegistry
 {
    private readonly IReadOnlyList<ComponentDescriptor> _components;
    private readonly IServiceProvider _provider;
+   
+   internal IServiceProvider Provider => _provider;
 
    internal ComponentProvider (IEnumerable<ComponentDescriptor> components, IServiceProvider provider)
    {
       _components = new List<ComponentDescriptor>(components).AsReadOnly();
       _provider = provider;
    }
-
-   internal ComponentDescriptor? GetPackager (Type eventType)
+   internal EventDescriptor GetEventDescriptor(IEvent @event)
+   {
+      var eventType = @event.GetType();
+      var descriptor = _components.First(d =>
+         d is EventDescriptor ed &&
+         ed.ComponentType == eventType)
+         .As<EventDescriptor>();
+      descriptor.Instance = @event;
+      return descriptor;
+   }
+   internal PackagerDescriptor? GetPackagerDescriptorFor (Type eventType)
    {
       var descriptor = _components.FirstOrDefault(d =>
          d is PackagerDescriptor pd &&
-         pd.EventType == eventType);
+         pd.EventType == eventType)?
+         .As<PackagerDescriptor?>();
       if (descriptor is null) return null;
       var template = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = template;
       return descriptor;
    }
-   internal ComponentDescriptor? GetContract (Type eventType)
+   internal ContractDescriptor? GetContractDescriptorFor (Type eventType)
    {
       var descriptor = _components.FirstOrDefault(d =>
          d is ContractDescriptor cd &&
-         cd.EventType == eventType);
+         cd.EventType == eventType)?
+         .As<ContractDescriptor?>();
       if (descriptor is null) return null;
       var contract = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = contract;
       return descriptor;
    }
-   internal ComponentDescriptor? GetEffect (Type eventType)
+   internal EffectDescriptor? GetEffectDescriptorFor (Type eventType)
    {
       var descriptor = _components.FirstOrDefault(d =>
          d is EffectDescriptor ed &&
-         ed.EventType == eventType);
+         ed.EventType == eventType)?
+         .As<EffectDescriptor?>();
       if (descriptor is null) return null;
       var effect = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = effect;
-      return descriptor;
+      return (EffectDescriptor?) descriptor;
    }
-   internal IEnumerable<ComponentDescriptor> GetRules (Type eventType)
+   internal IEnumerable<RuleDescriptor> GetRulesDescriptorsFor (Type eventType)
    {
       var ruleDescriptors = _components.Where(d =>
          d is RuleDescriptor rd &&
-         rd.EventType == eventType).ToArray();
+         rd.EventType == eventType)
+         .Cast<RuleDescriptor>()
+         .ToArray();
       if (ruleDescriptors.Length > 0) return [];
       return _provider.GetServices(ruleDescriptors.First().GenericType)
          .Where(s => s is not null)

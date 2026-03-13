@@ -1,27 +1,29 @@
 ﻿using RpgCompanion.Core.Events;
 
 using System.Collections;
+using RpgCompanion.Application.Reflection;
+using RpgCompanion.Application.Services;
 
 namespace RpgCompanion.Application;
 
-internal class EventQueue : IEnumerable<IEvent>
+internal class EventQueue
 {
-   private readonly Queue<IEvent> _queue;
-
-   public EventQueue (Queue<IEvent> queue)
-   {
-      _queue = queue;
-   }
-
-   public IEvent Dequeue ()
+   private readonly PriorityQueue<EventDescriptor, int> _queue = new();
+   
+   public EventDescriptor Dequeue ()
    {
       return _queue.Dequeue();
    }
-   public void Enqueue(IEvent @event)
+   public void Enqueue(EventDescriptor descriptor)
    {
-      _queue.Enqueue(@event);
+      _queue.Enqueue(descriptor, descriptor.EffectivePriority);
    }
-
-   public IEnumerator<IEvent> GetEnumerator () => ((IEnumerable<IEvent>) _queue).GetEnumerator();
-   IEnumerator IEnumerable.GetEnumerator () => ((IEnumerable) _queue).GetEnumerator();
+   public void EnqueueRange(IEnumerable<EventDescriptor> descriptors)
+   {
+      _queue.EnqueueRange(descriptors.Select(descriptor => (descriptor, descriptor.EffectivePriority)));
+   }
+   public bool Any()
+   {
+      return _queue.Count > 0;
+   }
 }

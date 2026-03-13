@@ -6,6 +6,7 @@ using RpgCompanion.Core.Events;
 using RpgCompanion.Core.Events.Producers;
 
 using System.Collections;
+using RpgCompanion.Core.Meta;
 
 namespace RpgCompanion.Application.Services;
 
@@ -25,6 +26,10 @@ internal class ComponentCollection : IEnumerable<ComponentDescriptor>
       return descriptor;
    }
 
+   internal void AddInitializer<TInitializer>() where TInitializer : class, IInitializer
+   {
+      _services.AddTransient<TInitializer>();
+   }
    internal EventDescriptor AddEvent<TEvent> ()
       where TEvent : IEvent
    {
@@ -36,7 +41,7 @@ internal class ComponentCollection : IEnumerable<ComponentDescriptor>
       _components.Add(descriptor);
       return descriptor;
    }
-   internal RuleDescriptor AddRule<TRule, TEvent> ()
+   internal RuleDescriptor AddRule<TRule, TEvent> (RuleOrdering ordering)
       where TEvent : IEvent
       where TRule : IRule<TEvent>
    {
@@ -45,6 +50,7 @@ internal class ComponentCollection : IEnumerable<ComponentDescriptor>
          ComponentType = typeof(TRule),
          GenericType = typeof(IRule<TEvent>),
          EventType = typeof(TEvent),
+         Ordering = ordering,
       };
       _services.AddTransient(descriptor.ComponentType);
       _services.AddTransient(descriptor.GenericType, descriptor.ComponentType);
