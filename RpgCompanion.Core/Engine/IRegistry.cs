@@ -1,8 +1,7 @@
-﻿using RpgCompanion.Core.Events;
-
 namespace RpgCompanion.Core.Engine;
 
 public interface IRegistry
 {
-   public IEffect<TEvent>? GetEffectFor<TEvent>() where TEvent : IEvent;
+    public T? GetComponent<T>() where T : class;
+    public T GetRequiredComponent<T>() where T : class;
 }

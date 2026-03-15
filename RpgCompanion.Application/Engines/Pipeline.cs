@@ -21,7 +21,7 @@ internal class Pipeline<TEvent>(ComponentProvider componentProvider, EventQueue 
     private readonly ComponentProvider _componentProvider = componentProvider;
     private readonly EventQueue _eventQueue = eventQueue;
 
-    public IPipeline<TEventOut> FollowedBy<TEventOut>(Func<TEvent, TEventOut> sequence) where TEventOut : IEvent
+    public IPipeline<TEventOut> FollowedBy<TEventOut>(Continuation<TEvent, TEventOut> sequence) where TEventOut : IEvent
     {
         var descriptor = _componentProvider.GetEventDescriptor(typeof(TEvent));
         descriptor.Continuations.Add(sequence);

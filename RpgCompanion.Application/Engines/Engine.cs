@@ -27,7 +27,7 @@ internal class Engine
         {
             return;
         }
-        var context = new Context(this, plugin);
+        var context = new Context(plugin);
         var pipeline = new Pipeline(plugin.Registry, _queue);
         var eventDesc = Queue.Dequeue();
         var templateDesc = plugin.Registry.GetPackagerDescriptorFor(eventDesc.ComponentType);

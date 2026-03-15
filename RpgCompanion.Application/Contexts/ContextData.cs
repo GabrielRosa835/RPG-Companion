@@ -8,7 +8,7 @@ internal class ContextData : IEditableContextData, IContextData
 
     internal bool Contains(ContextKey key) => _data.ContainsKey(key.Name);
 
-    public T Get<T>(ContextKey<T> key) => (T)_data[key.Name];
+    public T Get<T>(ContextKey<T> key) => (T) _data[key.Name];
     public void Set<T>(ContextKey<T> key, T value) => _data[key.Name] = value!;
     public bool Contains<T>(ContextKey<T> key) => _data.ContainsKey(key.Name);
     public bool TryGet<T>(ContextKey<T> key, out T value)
