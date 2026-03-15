@@ -1,9 +1,9 @@
-﻿using RpgCompanion.Core.Contexts;
-
 namespace RpgCompanion.Core.Events;
+
+using RpgCompanion.Core.Engine;
 
 public interface IEffect<in TEvent> where TEvent : IEvent
 {
-   bool ShouldApply(TEvent @event, IContext context);
-   void Apply (TEvent @event, IContext context);
+    public bool ShouldApply(TEvent e);
+    public void Apply(TEvent e, IPipeline pipeline);
 }

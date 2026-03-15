@@ -1,8 +1,8 @@
-using RpgCompanion.Core.Events;
-
 namespace RpgCompanion.Core.Contexts;
+
+using RpgCompanion.Core.Events;
 
 public interface IPackager<in TEvent> where TEvent : IEvent
 {
-    void Pack (TEvent @event, IContext context);
+    public void Pack(TEvent e, IEditableContext context);
 }

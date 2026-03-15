@@ -2,9 +2,9 @@
 
 internal static class Utils
 {
-   public static T As<T> (this object obj)
+   public static T As<T> (this object? obj)
    {
-      return (T) obj;
+      return obj is null ? default! : (T) obj;
    }
 
    public static bool Implements(this Type type, Type interfaceType)

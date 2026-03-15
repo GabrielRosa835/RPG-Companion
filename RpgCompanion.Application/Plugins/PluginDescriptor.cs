@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace RpgCompanion.Application;
 
-internal class PluginDescriptor : IEquatable<PluginDescriptor>
+public class PluginDescriptor : IEquatable<PluginDescriptor>
 {
     internal string Path { get; init; } = default!;
     internal string Resource { get; init; } = default!;

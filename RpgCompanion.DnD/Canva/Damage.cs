@@ -1,23 +1,24 @@
-using RpgCompanion.Core.Contexts;
-using RpgCompanion.Core.Events;
-
 namespace RpgCompanion.DnD;
+
+using RpgCompanion.Core.Engine;
+using RpgCompanion.Core.Events;
+using RpgCompanion.DnD.Canva;
 
 public record Damage(int Value, Defender Target) : IEvent;
 
 public class DamageEffect : IEffect<Damage>
 {
-    public bool ShouldApply(Damage damageEvent, IContext context)
+    public bool ShouldApply(Damage e)
     {
-        return damageEvent.Target.Health > damageEvent.Value;
+        return e.Target.Health > e.Value;
     }
 
-    public void Apply(Damage damageEvent, IContext context)
+    public void Apply(Damage e, IPipeline pipeline)
     {
-        damageEvent.Target.Health -= damageEvent.Value;
-        if (damageEvent.Target.Health <= 0)
+        e.Target.Health -= e.Value;
+        if (e.Target.Health <= 0)
         {
-            damageEvent.Target.Health = 0;
+            e.Target.Health = 0;
         }
     }
 }

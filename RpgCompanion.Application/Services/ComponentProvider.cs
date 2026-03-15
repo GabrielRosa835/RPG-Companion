@@ -20,13 +20,16 @@ internal class ComponentProvider : IRegistry
    }
    internal EventDescriptor GetEventDescriptor(IEvent @event)
    {
-      var eventType = @event.GetType();
-      var descriptor = _components.First(d =>
+      var descriptor = GetEventDescriptor(@event.GetType());
+      descriptor.Instance = @event;
+      return descriptor;
+   }
+   internal EventDescriptor GetEventDescriptor (Type eventType)
+   {
+      return _components.First(d =>
          d is EventDescriptor ed &&
          ed.ComponentType == eventType)
          .As<EventDescriptor>();
-      descriptor.Instance = @event;
-      return descriptor;
    }
    internal PackagerDescriptor? GetPackagerDescriptorFor (Type eventType)
    {
@@ -37,17 +40,6 @@ internal class ComponentProvider : IRegistry
       if (descriptor is null) return null;
       var template = _provider.GetRequiredService(descriptor.GenericType);
       descriptor.Instance = template;
-      return descriptor;
-   }
-   internal ContractDescriptor? GetContractDescriptorFor (Type eventType)
-   {
-      var descriptor = _components.FirstOrDefault(d =>
-         d is ContractDescriptor cd &&
-         cd.EventType == eventType)?
-         .As<ContractDescriptor?>();
-      if (descriptor is null) return null;
-      var contract = _provider.GetRequiredService(descriptor.GenericType);
-      descriptor.Instance = contract;
       return descriptor;
    }
    internal EffectDescriptor? GetEffectDescriptorFor (Type eventType)
@@ -78,5 +70,11 @@ internal class ComponentProvider : IRegistry
             return descriptor;
          })
          .ToList();
+   }
+
+   public IEffect<TEvent>? GetEffectFor<TEvent> () where TEvent : IEvent
+   {
+      var effectDescriptor = GetEffectDescriptorFor (typeof (TEvent));
+      return effectDescriptor?.Instance.As<IEffect<TEvent>>();
    }
 }

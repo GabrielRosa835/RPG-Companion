@@ -1,21 +1,14 @@
 ﻿namespace RpgCompanion.DnD;
 
-public abstract class Dice
+public abstract record Dice
 {
    public abstract int Roll ();
 
-   public class D20 : NormalDice
-   {
-      public override int MaxValue => 20;
-   }
-   public class D4 : NormalDice
-   {
-      public override int MaxValue => 4;
-   }
+   public record D20 () : Normal(20);
+   public record D4 () : Normal(4);
 
-   public abstract class NormalDice : Dice
+   public abstract record Normal(int MaxValue) : Dice
    {
-      public abstract int MaxValue { get; }
       public override int Roll ()
       {
          return Random.Shared.Next(1, MaxValue + 1);

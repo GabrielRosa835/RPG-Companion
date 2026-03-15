@@ -1,26 +1,33 @@
 using RpgCompanion.Core.Contexts;
+using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Events;
-using RpgCompanion.Core.Events.Producers;
+using RpgCompanion.DnD.Canva;
 
 namespace RpgCompanion.DnD;
 
-public record Heal(int Value, Defender target) : IEvent;
-
-public class HealingAreaRule : IRule
+public record Heal(int Value, Defender target) : IEvent
 {
-    public static readonly ContextKey<Defender> Target = new("Target");
-    public static readonly ContextKey<dynamic> HealingSpell = new("Spell");
-    
-    public bool ShouldApply(ISnapshot context)
-    {
-        Defender target = context.Data.Get(Target);
-        return !target.IsDead;
-    }
+   public class Effect : IEffect<Heal>
+   {
+      public void Apply (Heal @event, IPipeline context)
+      {
+         @event.target.Health += @event.Value;
+         if (@event.target.Health > @event.target.MaxHealth)
+         {
+            @event.target.Health = @event.target.MaxHealth;
+         }
+      }
 
-    public IEvent Apply(ISnapshot context)
-    {
-        Defender target = context.Data.Get(Target);
-        int amount = context.Data.Get(HealingSpell).HealingDice.Roll();
-        return new Heal(amount, target);
-    }
+      public bool ShouldApply (Heal @event)
+      {
+         return @event.target.Health < @event.target.MaxHealth;
+      }
+   }
+   public class Packager : IPackager<Heal>
+   {
+      public void Pack (Heal @event, IEditableContext context)
+      {
+         throw new NotImplementedException();
+      }
+   }
 }

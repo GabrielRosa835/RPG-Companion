@@ -16,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Core", "RpgCom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "RpgCompanion.DnD\RpgCompanion.DnD.csproj", "{33326DBD-BC78-F8AC-454E-60FD2204602F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Tests", "RpgCompanion.Tests\RpgCompanion.Tests.csproj", "{98923BFB-37E8-437A-AB56-2F55D0A2F9A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD.Tests", "RpgCompanion.DnD.Tests\RpgCompanion.DnD.Tests.csproj", "{BA21047C-7946-4A9D-8B73-0C48E0D5B437}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +42,14 @@ Global
 		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33326DBD-BC78-F8AC-454E-60FD2204602F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98923BFB-37E8-437A-AB56-2F55D0A2F9A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98923BFB-37E8-437A-AB56-2F55D0A2F9A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98923BFB-37E8-437A-AB56-2F55D0A2F9A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98923BFB-37E8-437A-AB56-2F55D0A2F9A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA21047C-7946-4A9D-8B73-0C48E0D5B437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA21047C-7946-4A9D-8B73-0C48E0D5B437}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA21047C-7946-4A9D-8B73-0C48E0D5B437}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA21047C-7946-4A9D-8B73-0C48E0D5B437}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

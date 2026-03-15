@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Helpers\**" />
-    <EmbeddedResource Remove="Helpers\**" />
-    <None Remove="Helpers\**" />
+    <InternalsVisibleTo Include="RpgCompanion.Tests" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,18 +1,20 @@
-﻿using RpgCompanion.Core.Contexts;
-using RpgCompanion.Core.Engine;
+﻿using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Events;
-using RpgCompanion.Core.Events.Producers;
 
 namespace RpgCompanion.DnD;
 
-public record DiceRoll(Dice Dice, IEvent Next) : IEvent;
-
-public class DiceRollEffect : IEffect<DiceRoll>
+public record DiceRoll(Dice Dice) : IEvent
 {
-   public void Apply(DiceRoll diceRollEvent, IContext context)
+   public int Result { get; private set; } = 0;
+
+   public class Effect : IEffect<DiceRoll>
    {
-      int result = diceRollEvent.Dice.Roll();
-      context.Raise(diceRollEvent);
+      public void Apply (DiceRoll diceRollEvent, IPipeline pipeline)
+      {
+         int result = diceRollEvent.Dice.Roll();
+         diceRollEvent.Result = result;
+      }
+      public bool ShouldApply (DiceRoll @event) => true;
    }
-   public bool ShouldApply (DiceRoll @event, IContext context) => true;
 }
+

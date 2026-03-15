@@ -1,12 +1,12 @@
 using RpgCompanion.Core.Engine;
-using RpgCompanion.Core.Events;
 
 namespace RpgCompanion.Core.Contexts;
 
+/// <summary>
+/// Readonly context for Rules
+/// </summary>
 public interface IContext
 {
    IContextData Data { get; }
    IRegistry Registry { get; }
-
-   void Raise (IEvent @event);
 }

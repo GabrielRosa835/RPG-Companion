@@ -1,5 +1,6 @@
 namespace RpgCompanion.Application.Services;
 
+[Flags]
 public enum RuleOrdering
 {
     Before = 1 << 0,

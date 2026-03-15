@@ -1,28 +1,21 @@
+namespace RpgCompanion.Application.Reflection;
+
 using RpgCompanion.Application.Services;
 using RpgCompanion.Core.Contexts;
+using RpgCompanion.Core.Engine;
 using RpgCompanion.Core.Events;
-
-namespace RpgCompanion.Application.Reflection;
 
 internal interface IReflect
 {
-    bool ShouldApply(RuleDescriptor descriptor, ISnapshot snapshot);
-    IEvent Apply(RuleDescriptor descriptor, ISnapshot snapshot);
+    public bool ShouldApply(RuleDescriptor descriptor, IContext snapshot);
+    public IEvent Apply(RuleDescriptor descriptor, IContext snapshot);
 }
-
 internal interface IReflectEffect
 {
-    bool ShouldApply(EffectDescriptor descriptor, IEvent @event, IContext context);
-    void Apply(EffectDescriptor descriptor, IEvent @event, IContext context);
+    public bool ShouldApply(EffectDescriptor descriptor, IEvent e, IPipeline pipeline);
+    public void Apply(EffectDescriptor descriptor, IEvent e, IPipeline pipeline);
 }
-
-internal interface IReflectContract
-{
-    IEnumerable<ContextKey> Requirements(ContractDescriptor descriptor);
-    IEnumerable<ContextKey> Outputs(ContractDescriptor descriptor);
-}
-
 internal interface IReflectPackager
 {
-    void Pack(PackagerDescriptor descriptor, IEvent @event, IContext context);
+    public void Pack(PackagerDescriptor descriptor, IEvent e, IEditableContext context);
 }

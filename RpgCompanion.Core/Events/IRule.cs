@@ -1,15 +1,9 @@
-﻿using RpgCompanion.Core.Contexts;
-
 namespace RpgCompanion.Core.Events.Producers;
 
-public interface IRule
-{
-   bool ShouldApply(ISnapshot context);
-   IEvent Apply (ISnapshot context);
-}
+using RpgCompanion.Core.Contexts;
 
 public interface IRule<in TEvent> where TEvent : IEvent
 {
-   bool ShouldApply(ISnapshot context);
-   IEvent Apply (ISnapshot context);
+    public bool ShouldApply(IContext context);
+    public IEvent Apply(IContext context);
 }
