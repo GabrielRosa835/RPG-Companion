@@ -1,80 +1,79 @@
 namespace RpgCompanion.Application;
 
+using Core.Engine;
 using Microsoft.Extensions.DependencyInjection;
-using RpgCompanion.Application.Reflection;
-using RpgCompanion.Application.Services;
-using RpgCompanion.Core.Engine;
-using RpgCompanion.Core.Events;
+using Services;
 
 internal class ComponentProvider : IRegistry
 {
-    private readonly IReadOnlyList<ComponentDescriptor> _components;
+    private readonly ComponentCollection _components;
     private readonly IServiceProvider _provider;
 
     internal IServiceProvider Provider => _provider;
 
-    internal ComponentProvider(IEnumerable<ComponentDescriptor> components, IServiceProvider provider)
+    internal ComponentProvider(ComponentCollection components, IServiceProvider provider)
     {
-        _components = new List<ComponentDescriptor>(components).AsReadOnly();
+        _components = new (components);
         _provider = provider;
     }
-    internal EventDescriptor GetEventDescriptor(IEvent @event)
-    {
-        var descriptor = GetEventDescriptor(@event.GetType());
-        descriptor.Instance = @event;
-        return descriptor;
-    }
+
     internal EventDescriptor GetEventDescriptor(Type eventType)
     {
-        return _components.First(d =>
-           d is EventDescriptor ed &&
-           ed.ComponentType == eventType)
-           .As<EventDescriptor>();
+        return _components.Events.FirstOrDefault(d => d.Type == eventType)
+            ?? throw new InvalidOperationException($"Event {eventType} was not found");
     }
-    internal PackagerDescriptor? GetPackagerDescriptorFor(Type eventType)
+    internal BundlerDescriptor? GetBundlerDescriptorFor(Type eventType)
     {
-        var descriptor = _components.FirstOrDefault(d =>
-           d is PackagerDescriptor pd &&
-           pd.EventType == eventType)?
-           .As<PackagerDescriptor?>();
-        if (descriptor is null)
-            return null;
-        var template = _provider.GetRequiredService(descriptor.GenericType);
-        descriptor.Instance = template;
+        BundlerDescriptor? descriptor = _components.Bundlers.FirstOrDefault(d => d.EventType == eventType);
+        FillInstance(descriptor);
         return descriptor;
     }
     internal EffectDescriptor? GetEffectDescriptorFor(Type eventType)
     {
-        var descriptor = _components.FirstOrDefault(d =>
-           d is EffectDescriptor ed &&
-           ed.EventType == eventType)?
-           .As<EffectDescriptor?>();
-        if (descriptor is null)
-            return null;
-        var effect = _provider.GetRequiredService(descriptor.GenericType);
-        descriptor.Instance = effect;
-        return (EffectDescriptor?) descriptor;
+        var descriptor = _components.Effects.FirstOrDefault(d => d.EventType == eventType);
+        FillInstance(descriptor);
+        return descriptor;
     }
-    internal IEnumerable<RuleDescriptor> GetRulesDescriptorsFor(Type eventType)
+    internal IReadOnlyList<RuleDescriptor> GetRulesDescriptorsFor(Type eventType)
     {
-        var ruleDescriptors = _components.Where(d =>
-           d is RuleDescriptor rd &&
-           rd.EventType == eventType)
-           .Cast<RuleDescriptor>()
-           .ToArray();
-        if (ruleDescriptors.Length > 0)
+        var descriptors = _components.Rules;
+        if (descriptors.Count > 0)
+        {
             return [];
-        return _provider.GetServices(ruleDescriptors.First().GenericType)
-           .Where(s => s is not null)
-           .Select(s =>
-           {
-               var descriptor = ruleDescriptors.First(d => d.ComponentType == s!.GetType());
-               descriptor.Instance = s!;
-               return descriptor;
-           })
-           .ToList();
+        }
+        var serviceDescriptor = descriptors.FirstOrDefault(d => d.HasService);
+        if (serviceDescriptor is null)
+        {
+            return descriptors;
+        }
+        List<object> services = _provider.GetServices(serviceDescriptor.Service!.ServiceType)
+            .Where(s => s is not null)
+            .ToList()!;
+        if (services.Count > 0)
+        {
+            return descriptors;
+        }
+        foreach (var descriptor in descriptors.Where(d => d.HasService))
+        {
+            descriptor.Instance = services.FirstOrDefault(s => s.GetType() == descriptor.Service!.ImplementationType!)
+                ?? throw new InvalidOperationException($"Service for type '{descriptor.Service!.ImplementationType!.Name}' was not found");
+        }
+        return descriptors.AsReadOnly();
     }
 
     public T? GetComponent<T>() where T : class => _provider.GetService<T>();
     public T GetRequiredComponent<T>() where T : class => _provider.GetRequiredService<T>();
+
+
+    private void FillInstance(ComponentDescriptor? descriptor)
+    {
+        if (descriptor is null)
+        {
+            return;
+        }
+        if (descriptor.Instance is null && descriptor.HasService)
+        {
+            descriptor.Instance = _provider.GetRequiredService(descriptor.Service!.ServiceType);
+        }
+    }
 }

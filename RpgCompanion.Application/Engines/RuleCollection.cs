@@ -6,9 +6,9 @@ internal class RuleCollection
 {
     private readonly List<RuleDescriptor> _rules = [];
 
-    internal IEnumerable<RuleDescriptor> AllBefore => _rules
+    internal IEnumerable<RuleDescriptor> Before => _rules
        .Where(d => d.Ordering.HasFlag(RuleOrdering.Before));
-    internal IEnumerable<RuleDescriptor> AllAfter => _rules
+    internal IEnumerable<RuleDescriptor> After => _rules
        .Where(d => d.Ordering.HasFlag(RuleOrdering.After));
 
     internal void SetValues(IEnumerable<RuleDescriptor> rules)

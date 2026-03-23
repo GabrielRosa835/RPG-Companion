@@ -23,9 +23,9 @@ public record Heal(int Value, Defender target) : IEvent
          return @event.target.Health < @event.target.MaxHealth;
       }
    }
-   public class Packager : IPackager<Heal>
+   public class Bundler : IBundler<Heal>
    {
-      public void Pack (Heal @event, IEditableContext context)
+      public void Bundle (Heal @event, IEditableContext context)
       {
          throw new NotImplementedException();
       }

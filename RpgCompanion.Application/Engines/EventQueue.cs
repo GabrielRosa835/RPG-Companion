@@ -1,25 +1,17 @@
 namespace RpgCompanion.Application;
 
-using RpgCompanion.Application.Services;
+using Services;
 
 internal class EventQueue
 {
-    private readonly PriorityQueue<EventDescriptor, int> _queue = new();
+    private readonly PriorityQueue<EventItem, int> _queue = new();
 
-    public EventDescriptor Dequeue()
-    {
-        return _queue.Dequeue();
-    }
-    public void Enqueue(EventDescriptor descriptor)
-    {
-        _queue.Enqueue(descriptor, descriptor.EffectivePriority);
-    }
-    public void EnqueueRange(IEnumerable<EventDescriptor> descriptors)
-    {
-        _queue.EnqueueRange(descriptors.Select(descriptor => (descriptor, descriptor.EffectivePriority)));
-    }
-    public bool Any()
-    {
-        return _queue.Count > 0;
-    }
+    public EventItem Dequeue() => _queue.Dequeue();
+
+    public void Enqueue(EventItem item) => _queue.Enqueue(item, item.Priority);
+
+    public void EnqueueRange(IEnumerable<EventItem> items) =>
+        _queue.EnqueueRange(items.Select(i => (i, i.Priority)));
+
+    public bool Any() => _queue.Count > 0;
 }

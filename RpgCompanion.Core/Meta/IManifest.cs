@@ -4,5 +4,5 @@ namespace RpgCompanion.Core.Meta;
 
 public interface IManifest
 {
-   void Setup(IPluginBuilder builder);
+   void Configure(IPluginBuilder builder);
 }

@@ -1,0 +1,17 @@
+\documentclass{article}
+
+\author{Gabriel Rosa da Silva}
+\title{RPG - Companion}
+
+\begin{document}
+	\maketitle
+	
+	\section{Anotações}
+	
+	A arquitetura geral consistirá num módulo da engine, numa biblioteca para desenvolvimento de plugins e uma biblioteca para comunicação externa.
+	
+	A engine será altamente acoplada ao PDK (Plugin Development Kit), pois serve apenas como infraestrutura base para a execução dos plugins. A engine não haverá nenhuma lógica atrelada diretamente a ela, mas apenas executará a lógica disponibilizada pelos plugins desejados.
+	
+	Exemplo: um plugin de D\&D deve ser injetado na engine e um consumidor externo irá se conectar aos eventos gerados e exibirá para o usuário.
+	
+\end{document}

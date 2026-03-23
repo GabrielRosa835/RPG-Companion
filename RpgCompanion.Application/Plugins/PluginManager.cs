@@ -1,6 +1,8 @@
 namespace RpgCompanion.Application;
 
 using System.Runtime.Loader;
+using Core.Events;
+using Microsoft.Extensions.DependencyInjection;
 using RpgCompanion.Application.Reflection;
 using RpgCompanion.Core.Meta;
 using Utils.UnionTypes;
@@ -12,6 +14,7 @@ internal class PluginManager
 
     public PluginDescriptor this[int index] => _descriptors[index];
     public PluginDescriptor this[string name] => _descriptors.First(d => d.Resource == name);
+    public PluginDescriptor this[Type eventType] => _descriptors.First(d => d.Events.Contains(eventType));
 
     public IReadOnlyList<PluginDescriptor> FindPlugins(string pluginsFolder)
     {
@@ -19,11 +22,11 @@ internal class PluginManager
         {
             throw new DirectoryNotFoundException(pluginsFolder);
         }
+
         _descriptors.AddRange(Directory.GetFiles(pluginsFolder, "*.dll", SearchOption.AllDirectories)
             .Select(dll => new PluginDescriptor
             {
-                Resource = Path.GetFileNameWithoutExtension(dll),
-                Path = Path.GetFullPath(dll),
+                Resource = Path.GetFileNameWithoutExtension(dll), Path = Path.GetFullPath(dll),
             })
             .Where(d => !_descriptors.Contains(d)));
         return Descriptors;
@@ -35,8 +38,10 @@ internal class PluginManager
         {
             return Task.FromResult(Results.Success());
         }
+
         return LoadInternal(plugin);
     }
+
     public Task<Attempt> ForceLoad(PluginDescriptor plugin)
     {
         return LoadInternal(plugin);
@@ -49,29 +54,33 @@ internal class PluginManager
             var context = new AssemblyLoadContext(plugin.Resource, isCollectible: true);
             var assembly = context.LoadFromAssemblyPath(plugin.Path);
 
-            var manifestType = assembly.GetTypes().FirstOrDefault(
-              t => t.Implements(typeof(IManifest)));
+            var manifestType = assembly.GetTypes().FirstOrDefault(t => t.Implements(typeof(IManifest)));
 
             if (manifestType is null || Activator.CreateInstance(manifestType) is not IManifest manifest)
             {
                 return Results.Failure();
             }
 
-            var pluginBuilder = new PluginBuilder();
-            manifest.Setup(pluginBuilder);
-            var registry = pluginBuilder.Build();
+            var services = new ServiceCollection();
+            var pluginBuilder = new PluginBuilder(services);
+            manifest.Configure(pluginBuilder);
+            var definition = pluginBuilder.Build();
+            var registry = new ComponentProvider(definition.Components, definition.Services);
 
-            if (pluginBuilder.InitializerType is not null)
+            if (definition.Metadata.InitializerType is not null)
             {
-                var initializer = (IInitializer?)registry.Provider.GetService(pluginBuilder.InitializerType);
+                var initializer = (IInitializer?) definition.Services.GetService(definition.Metadata.InitializerType);
                 initializer?.Initialize(registry);
             }
-            pluginBuilder.Initialization?.Invoke(registry);
+
+            definition.Metadata.Initialization?.Invoke(registry);
 
             plugin.Assembly = assembly;
-            plugin.Identifier = new(pluginBuilder.PluginName, pluginBuilder.PluginVersion);
+            plugin.Identifier = new(definition.Metadata.PluginName, definition.Metadata.PluginVersion);
             plugin.Registry = registry;
             plugin.Activated = true;
+            plugin.Events.AddRange(assembly.GetTypes()
+                .Where(t => t.Implements(typeof(IEvent))));
 
             return Results.Success();
         }
