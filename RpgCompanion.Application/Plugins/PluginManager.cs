@@ -2,12 +2,12 @@ namespace RpgCompanion.Application;
 
 using System.Runtime.Loader;
 using Core.Events;
+using Core.Meta;
 using Microsoft.Extensions.DependencyInjection;
-using RpgCompanion.Application.Reflection;
-using RpgCompanion.Core.Meta;
+using Reflection;
 using Utils.UnionTypes;
 
-internal class PluginManager
+internal class PluginManager(IServiceProvider appServices)
 {
     private readonly List<PluginDescriptor> _descriptors = [];
     public IReadOnlyList<PluginDescriptor> Descriptors => _descriptors.AsReadOnly();
@@ -39,15 +39,15 @@ internal class PluginManager
             return Task.FromResult(Results.Success());
         }
 
-        return LoadInternal(plugin);
+        return LoadInternal(plugin, appServices);
     }
 
     public Task<Attempt> ForceLoad(PluginDescriptor plugin)
     {
-        return LoadInternal(plugin);
+        return LoadInternal(plugin, appServices);
     }
 
-    internal static Task<Attempt> LoadInternal(PluginDescriptor plugin) => Task.Run(() =>
+    internal static Task<Attempt> LoadInternal(PluginDescriptor plugin, IServiceProvider appServices) => Task.Run(() =>
     {
         try
         {
@@ -62,10 +62,18 @@ internal class PluginManager
             }
 
             var services = new ServiceCollection();
+            services.AddAppServices(appServices);
             var pluginBuilder = new PluginBuilder(services);
             manifest.Configure(pluginBuilder);
             var definition = pluginBuilder.Build();
             var registry = new ComponentProvider(definition.Components, definition.Services);
+
+            plugin.Assembly = assembly;
+            plugin.Identifier = new(definition.Metadata.PluginName, definition.Metadata.PluginVersion);
+            plugin.Registry = registry;
+            plugin.Activated = true;
+            plugin.Events.AddRange(assembly.GetTypes()
+                .Where(t => t.Implements(typeof(IEvent))));
 
             if (definition.Metadata.InitializerType is not null)
             {
@@ -74,13 +82,6 @@ internal class PluginManager
             }
 
             definition.Metadata.Initialization?.Invoke(registry);
-
-            plugin.Assembly = assembly;
-            plugin.Identifier = new(definition.Metadata.PluginName, definition.Metadata.PluginVersion);
-            plugin.Registry = registry;
-            plugin.Activated = true;
-            plugin.Events.AddRange(assembly.GetTypes()
-                .Where(t => t.Implements(typeof(IEvent))));
 
             return Results.Success();
         }

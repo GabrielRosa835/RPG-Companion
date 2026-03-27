@@ -18,6 +18,7 @@ internal class PluginBuilder(IServiceCollection services) : IPluginBuilder
     {
         var builder = new EventBuilder<TEvent>(services, _definition.Components);
         configure(builder);
+        _definition.Components.Events.Add(builder.Build());
         return this;
     }
 

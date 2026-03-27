@@ -4,30 +4,35 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Utils.UnionTypes;
 
-internal class EngineJob(PluginManager pluginManager, IServiceProvider appProvider) : BackgroundService
+internal class EngineJob(PluginManager pluginManager, IServiceScopeFactory scopeFactory, EventQueue queue) : BackgroundService
 {
-    private readonly EventQueue _queue = new();
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            while (!_queue.Any())
+            try
             {
-                await Task.Delay(100, stoppingToken);
-            }
+                while (queue.Count == 0)
+                {
+                    await Task.Delay(100, stoppingToken);
+                }
 
-            var e = _queue.Dequeue();
-            var plugin = pluginManager[e.Descriptor.Type];
-            if (await pluginManager.Load(plugin).IsFailure())
+                var e = queue.Dequeue();
+                var plugin = pluginManager[e.Descriptor.Type];
+                if (await pluginManager.Load(plugin).IsFailure())
+                {
+                    return;
+                }
+
+                using var scope = scopeFactory.CreateScope();
+                var engine = scope.ServiceProvider.GetRequiredService<Engine>();
+
+                await engine.Execute(plugin.Registry, e, stoppingToken);
+            }
+            catch (Exception e)
             {
-                return;
+                e.PrintDetails();
             }
-
-            using var scope = appProvider.CreateScope();
-            var engine = scope.ServiceProvider.GetRequiredService<Engine>();
-
-            await engine.Execute(_queue, plugin.Registry, stoppingToken);
         }
     }
 }

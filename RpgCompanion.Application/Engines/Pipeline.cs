@@ -1,28 +1,27 @@
 namespace RpgCompanion.Application.Engines;
 
-using RpgCompanion.Core.Engine;
-using RpgCompanion.Core.Events;
+using Core.Engine;
+using Core.Events;
 using Services;
 
-internal class Pipeline(ComponentProvider componentProvider, EventQueue eventQueue) : IPipeline
+internal class Pipeline(EventQueue queue, ComponentProvider componentProvider) : IPipeline
 {
-    IPipeline<TEvent> IPipeline.Raise<TEvent>(TEvent e)
+    public IPipeline<TEvent> Raise<TEvent>(TEvent e) where TEvent : IEvent
     {
         var descriptor = componentProvider.GetEventDescriptor(e.GetType());
         var item = descriptor.CreateEvent(e);
-        eventQueue.Enqueue(item);
-        return new Pipeline<TEvent>(item, componentProvider, eventQueue);
+        queue.Enqueue(item);
+        return new Pipeline<TEvent>(item, componentProvider);
     }
 }
 
-internal class Pipeline<TEvent>(EventItem item, ComponentProvider componentProvider, EventQueue eventQueue) : IPipeline<TEvent> where TEvent : IEvent
+internal class Pipeline<TEvent>(EventItem item, ComponentProvider componentProvider) : IPipeline<TEvent> where TEvent : IEvent
 {
     public IPipeline<TEventOut> FollowedBy<TEventOut>(Continuation<TEvent, TEventOut> sequence) where TEventOut : IEvent
     {
         var descriptor = componentProvider.GetEventDescriptor(typeof(TEventOut));
         var newItem = descriptor.CreateEvent();
         item.Continuation = (sequence, newItem);
-        eventQueue.Enqueue(newItem);
-        return new Pipeline<TEventOut>(newItem, componentProvider, eventQueue);
+        return new Pipeline<TEventOut>(newItem, componentProvider);
     }
 }

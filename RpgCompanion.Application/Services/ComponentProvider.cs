@@ -20,7 +20,7 @@ internal class ComponentProvider : IRegistry
     internal EventDescriptor GetEventDescriptor(Type eventType)
     {
         return _components.Events.FirstOrDefault(d => d.Type == eventType)
-            ?? throw new InvalidOperationException($"Event {eventType} was not found");
+            ?? throw new InvalidOperationException($"Event '{eventType}' was not found");
     }
     internal BundlerDescriptor? GetBundlerDescriptorFor(Type eventType)
     {
@@ -61,8 +61,8 @@ internal class ComponentProvider : IRegistry
         return descriptors.AsReadOnly();
     }
 
-    public T? GetComponent<T>() where T : class => _provider.GetService<T>();
-    public T GetRequiredComponent<T>() where T : class => _provider.GetRequiredService<T>();
+    public T? Get<T>() where T : class => _provider.GetService<T>();
+    public T GetRequired<T>() where T : class => _provider.GetRequiredService<T>();
 
 
     private void FillInstance(ComponentDescriptor? descriptor)

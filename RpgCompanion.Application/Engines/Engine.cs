@@ -1,46 +1,48 @@
 namespace RpgCompanion.Application;
 
+using Core.Engine;
 using Core.Events;
 using Engines;
 using Reflection;
+using Services;
 
-internal class Engine(Reflect reflect)
+internal class Engine(Reflect reflect, EventQueue queue)
 {
     private readonly RuleCollection _rules = new();
     private readonly List<IEvent> _eventCache = [];
 
-    public async Task Execute(EventQueue queue, ComponentProvider componentProvider, CancellationToken cancellationToken = default)
+    public async Task Execute(ComponentProvider componentProvider, EventItem current, CancellationToken cancellationToken = default)
     {
+        var pipeline = new Pipeline(queue, componentProvider);
         var context = new Context(componentProvider);
-        var pipeline = new Pipeline(componentProvider, queue);
-        var eventDesc = queue.Dequeue();
-        var templateDesc = componentProvider.GetBundlerDescriptorFor(eventDesc.Descriptor.Type);
-        var effectDesc = componentProvider.GetEffectDescriptorFor(eventDesc.Descriptor.Type);
-        _rules.SetValues(componentProvider.GetRulesDescriptorsFor(eventDesc.Descriptor.Type));
+        var bundlerDesc = componentProvider.GetBundlerDescriptorFor(current.Descriptor.Type);
+        var effectDesc = componentProvider.GetEffectDescriptorFor(current.Descriptor.Type);
+        _rules.SetValues(componentProvider.GetRulesDescriptorsFor(current.Descriptor.Type));
 
-        if (templateDesc is not null)
+        if (bundlerDesc is not null)
         {
-            templateDesc.Apply(reflect, eventDesc.Instance!, context);
+            bundlerDesc.Apply(reflect, current.Instance!, context);
         }
 
         _eventCache.AddRange(_rules.Before
             .Where(rule => rule.ShouldApply(reflect, context))
             .Select(rule => rule.Apply(reflect, context)));
 
-        if (effectDesc is not null && effectDesc.ShouldApply(reflect, eventDesc.Instance!))
+        if (effectDesc is not null && effectDesc.ShouldApply(reflect, current.Instance!))
         {
-            effectDesc.Apply(reflect, eventDesc.Instance!, pipeline);
+            effectDesc.Apply(reflect, current.Instance!, pipeline);
         }
 
         _eventCache.AddRange(_rules.After
             .Where(rule => rule.ShouldApply(reflect, context))
             .Select(rule => rule.Apply(reflect, context)));
 
-        if (eventDesc.Continuation is not null)
+        if (current.Continuation is not null)
         {
-            var other = eventDesc.Continuation.Value.Sequence.DynamicInvoke(eventDesc.Instance).As<IEvent>();
-            eventDesc.Continuation.Value.Item.Instance = other;
-            _eventCache.Add(other);
+            var continuation = current.Continuation.Value;
+            var other = continuation.Sequence.DynamicInvoke(current.Instance).As<IEvent>();
+            continuation.Item.Instance = other;
+            queue.Enqueue(continuation.Item);
         }
 
         if (_eventCache.Count > 0)

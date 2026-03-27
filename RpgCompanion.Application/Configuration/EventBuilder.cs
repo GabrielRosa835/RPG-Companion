@@ -9,7 +9,11 @@ using Services;
 internal class EventBuilder<TEvent>(IServiceCollection services, ComponentCollection components) : IEventBuilder<TEvent> where TEvent : IEvent
 {
     private EventDescriptor _descriptor = new();
-    internal EventDescriptor Build() => _descriptor;
+    internal EventDescriptor Build()
+    {
+        _descriptor.Type = typeof(TEvent);
+        return _descriptor;
+    }
 
     public IEventBuilder<TEvent> WithName(string name)
     {

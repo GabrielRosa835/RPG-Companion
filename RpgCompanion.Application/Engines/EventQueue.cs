@@ -13,5 +13,5 @@ internal class EventQueue
     public void EnqueueRange(IEnumerable<EventItem> items) =>
         _queue.EnqueueRange(items.Select(i => (i, i.Priority)));
 
-    public bool Any() => _queue.Count > 0;
+    public int Count  => _queue.Count;
 }

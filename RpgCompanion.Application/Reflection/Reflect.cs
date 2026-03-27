@@ -7,7 +7,7 @@ internal class Reflect : IDisposable
     private readonly Dictionary<Type, Dictionary<string, MethodInfo>> _methods = [];
     private readonly Timer _cleanupTimer;
 
-    internal Reflect() => _cleanupTimer = new Timer(Clear, this, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+    public Reflect() => _cleanupTimer = new Timer(Clear, this, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
 
     public MethodInfo? GetMethod(Type genericType, string methodName)
     {

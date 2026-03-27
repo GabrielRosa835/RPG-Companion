@@ -8,7 +8,12 @@ using Services;
 internal class EffectBuilder<TEvent> (IServiceCollection services) : IEffectBuilder<TEvent> where TEvent : IEvent
 {
     private EffectDescriptor _descriptor = new();
-    public EffectDescriptor Build() => _descriptor;
+    public EffectDescriptor Build()
+    {
+        _descriptor.Condition ??= (EffectCondition<TEvent>) (_ => true);
+        _descriptor.EventType = typeof(TEvent);
+        return _descriptor;
+    }
 
     public IEffectBuilder<TEvent> WithComponent<TEffect>() where TEffect : class, IEffect<TEvent>
     {

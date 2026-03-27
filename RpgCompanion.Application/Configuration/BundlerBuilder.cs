@@ -11,6 +11,7 @@ internal class BundlerBuilder<TEvent>(IServiceCollection services) : IBundlerBui
     private BundlerDescriptor _descriptor = new();
     public BundlerDescriptor Build()
     {
+        _descriptor.EventType = typeof(TEvent);
         return _descriptor;
     }
 

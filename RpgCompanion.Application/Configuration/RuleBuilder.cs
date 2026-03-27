@@ -9,7 +9,12 @@ using Services;
 internal class RuleBuilder<TEvent>(IServiceCollection services) : IRuleBuilder<TEvent> where TEvent : IEvent
 {
     private RuleDescriptor _descriptor = new();
-    public RuleDescriptor Build() => _descriptor;
+    public RuleDescriptor Build()
+    {
+        _descriptor.Condition ??= (RuleCondition<TEvent>) (_ => true);
+        _descriptor.EventType = typeof(TEvent);
+        return _descriptor;
+    }
 
     public IRuleBuilder<TEvent> WithOrdering(RuleOrdering ordering)
     {
