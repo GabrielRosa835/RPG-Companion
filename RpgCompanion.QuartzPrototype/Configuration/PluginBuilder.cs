@@ -1,14 +1,11 @@
+namespace RpgCompanion.QuartzPrototype.Configuration;
+
+using Microsoft.Extensions.DependencyInjection;
+using Plugins;
+using RpgCompanion.Core.Engine;
+using RpgCompanion.Core.Engine.Contexts;
 using RpgCompanion.Core.Events;
 using RpgCompanion.Core.Meta;
-
-namespace RpgCompanion.Application;
-
-using Core.Engine;
-using Core.Engine.Contexts;
-using Engines;
-using Microsoft.Extensions.DependencyInjection;
-using RpgCompanion.Engine.Components;
-using Services;
 
 // Transient
 internal class PluginBuilder(IServiceCollection services) : IPluginBuilder
