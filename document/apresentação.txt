@@ -1,0 +1,29 @@
+Boa noite, professora. Tudo bem com a senhora?
+
+Sou o aluno Gabriel Rosa da Silva, estudante do curso de Engenharia da Computação na Facens. Entrei em contato pessoalmente e combinamos de trocar emails sobre a minha proposta de TCC. Clarificando, procuro adiantar o desenvolvimento deste e gostaria da sua orientação como especialista em Engenharia de Software.
+
+CONTEXTUALIZAÇÃO
+
+Para o caso da senhora não possuir familiaridade com o contexto dos 'jogos de RPG tabletop', irei sumarizar o tema da maneira mais sucinta que conseguir. Esses jogos são primariamente compostos por uma vasta gama de regras escritas que definem como um mundo fantástico funciona, tais como uma ambientação medieval, futurística ou mágica, sendo chamadas em conjunto de 'sistema'. Para jogar, pessoas se juntam em grupos e utilizam dessas regras (sistema) para construir uma narrativa embuída no mundo que estas definem, desenvolvendo em tempo real uma história de fantasia, como um teatro. 
+
+Nessa peça, cada integrante do grupo possui um papel e age de acordo com ele, mas sempre conforme o sistema. Como o objetivo dessa atividade é se divertir, inúmeras exceções são conscientemente e inconscientemente utilizadas ao longo do jogo, podendo serem esquecidas, desconsideradas, acrescentadas ou até mesmo transformadas, tudo com foco em maximizar o aproveitamento dos jogadores.
+
+PROPOSTA
+
+Como participante desse círculo cultural, já lidei com diversas situações em que o gerenciamento dessas regras se fez essencial, onde a falta deste levou meu grupo de amigos a maiores estresses. Ressalto que há certos sistemas no qual a profundidade e quantidade de conteúdo impossibilitam seu entendimento completo, especialmente em termos de memorização.
+
+Neste viés, procuro uma maneira não de apenas armazenar e organizar tais quantidades de informação, mas sim automatizar todo o processo de aplicação das regras. Um usuário desse suposto sistema poderia configurar o nível e forma da automação desejada para então delegar ao software o processamento das regras no momento que definir como necessário, majoritariamente durante o jogo, ou seja, em tempo real.
+
+PLANEJAMENTO
+
+Devido o alto grau de flexibilidade e eventual complexidade do contexto que procuro modelar, planejo construí-lo a partir de uma arquitetura baseada em eventos, com uma aplicação principal de processamento e clientes satélites que se conectam ao hospedeiro, apenas enviando ou reagindo a sinais. Dessa maneira, é possível capturar todo o fluxo amorfo de regras, como também injetar ou substituí-las em tempo de execução. 
+
+No quesito de extensibilidade, pretendo abstrair e externalizar os componentes lógicos principais num sistema de plugins. Pessoas capacitadas poderão utilizar de uma biblioteca núcleo para modelar os sistemas de RPG via código, e consumidores poderão optar por agregar tais extensões em suas instâncias locais do software.
+
+Os clientes, desacopladps desse pilar centralizador, poderão se inscrever no loop de processamento de eventos e exibir seletivamente as informações para o usuário. Se comunicarão, então, com o motor de eventos através do envio e recebimento de sinais, podendo introduzir novos eventos no fluxo ou reagir às inúmeras etapas da trativa destes, como o surgimento, resolução ou finalização. Esta abordagem permite abranger diversas opções de interação com o usuário, desde um serviço Web, Desktop ou até mesmo CLI, como também a utilização simultânea por múltiplos dispositivos em tempo real.      
+
+OBJETIVO
+
+Em consideração à entrega deste projeto, colocaria inicialmente como metas o desenvolvimento do motor de eventos, a biblioteca de plugins, um plugin para o sistema de D&D 5e, conhecido por seu alto nível de complexidade, e um cliente web, devido a maior facilidade de desenvolvimento deste. Em termos de tecnologias a serem utilizadas, já mapeei a aplicação principal para utilizar da linguagem C#, por ser uma linguagem robusta que ainda sim permite um alto grau de flexibilidade, especialmente no quesito de carregamento dinâmico de código. 
+
+Pretendo construir o motor de eventos utilizando a biblioteca de mensageria MassTransit, em sua versão ainda open-source. Já construí um protótipo do fluxo manualmente, sem utilizar de uma biblioteca própria para eventos, mas o nível de complexidade que encontrei faria tornar a implementação robusta o suficiente para o restante das funcionalidades um pesadelo de se desenvolver.  

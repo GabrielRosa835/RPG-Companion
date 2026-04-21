@@ -5,7 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>RpgCompanion.Application</RootNamespace>
+    <RootNamespace>RpgCompanion.Prototypes.Manual</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +17,7 @@
     <ProjectReference Include="..\RpgCompanion.Core\RpgCompanion.Core.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj"/>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Plugins Include="RpgCompanion.Canva"/>
     <Plugins Include="RpgCompanion.DnD" />

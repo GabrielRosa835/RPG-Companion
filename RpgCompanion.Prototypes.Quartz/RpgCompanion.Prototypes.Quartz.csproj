@@ -5,7 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>RpgCompanion.QuartzPrototype</RootNamespace>
+    <RootNamespace>RpgCompanion.Prototypes.Quartz</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
