@@ -10,25 +10,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		notes.md = notes.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Canva", "Plugins\RpgCompanion.Canva\RpgCompanion.Canva.csproj", "{E237C6E0-9EF8-4E4D-B524-8492219898EF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "Plugins\RpgCompanion.DnD\RpgCompanion.DnD.csproj", "{99FE7BC4-D9E7-447F-9A68-D57D7C418A78}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Manual", "Source\RpgCompanion.Prototypes.Manual\RpgCompanion.Prototypes.Manual.csproj", "{1A66A1DA-9256-4404-A35B-08C284D07AA1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Core", "Source\RpgCompanion.Core\RpgCompanion.Core.csproj", "{023215AF-9419-42A0-BE3C-042FEA17B925}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B7D91229-76BA-4B4B-A685-48C63F8E9AB8}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{BB81AC27-C10D-4FF8-AC29-9D8AFCC915FC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils", "Source\Utils\Utils.csproj", "{D36B63B2-45B4-4181-B981-958524CDB15D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Quartz", "RpgCompanion.Prototypes.Quartz\RpgCompanion.Prototypes.Quartz.csproj", "{DF07DA1E-CBB1-40A6-B9B2-B34186CCAB24}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.MassTransit", "RpgCompanion.Prototypes.MassTransit\RpgCompanion.Prototypes.MassTransit.csproj", "{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Host", "RpgCompanion.Host\RpgCompanion.Host.csproj", "{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Canva", "RpgCompanion.Canva\RpgCompanion.Canva.csproj", "{81AD4B31-28D3-4E46-9A28-0E659BECBBF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Core", "RpgCompanion.Core\RpgCompanion.Core.csproj", "{FC239D76-B100-4431-8BD8-DCB4E7E82B9B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "RpgCompanion.DnD\RpgCompanion.DnD.csproj", "{CEDCEA19-E429-4C90-B99A-210A62765088}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Manual", "RpgCompanion.Prototypes.Manual\RpgCompanion.Prototypes.Manual.csproj", "{975D7FF5-B132-4937-AF97-4DB71B5DE900}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Quartz", "RpgCompanion.Prototypes.Quartz\RpgCompanion.Prototypes.Quartz.csproj", "{C34EE8D9-472C-4675-A4D9-873923A93DC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,30 +30,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E237C6E0-9EF8-4E4D-B524-8492219898EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E237C6E0-9EF8-4E4D-B524-8492219898EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E237C6E0-9EF8-4E4D-B524-8492219898EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E237C6E0-9EF8-4E4D-B524-8492219898EF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{99FE7BC4-D9E7-447F-9A68-D57D7C418A78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{99FE7BC4-D9E7-447F-9A68-D57D7C418A78}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{99FE7BC4-D9E7-447F-9A68-D57D7C418A78}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{99FE7BC4-D9E7-447F-9A68-D57D7C418A78}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1A66A1DA-9256-4404-A35B-08C284D07AA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1A66A1DA-9256-4404-A35B-08C284D07AA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1A66A1DA-9256-4404-A35B-08C284D07AA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1A66A1DA-9256-4404-A35B-08C284D07AA1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{023215AF-9419-42A0-BE3C-042FEA17B925}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{023215AF-9419-42A0-BE3C-042FEA17B925}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{023215AF-9419-42A0-BE3C-042FEA17B925}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{023215AF-9419-42A0-BE3C-042FEA17B925}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D36B63B2-45B4-4181-B981-958524CDB15D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D36B63B2-45B4-4181-B981-958524CDB15D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D36B63B2-45B4-4181-B981-958524CDB15D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D36B63B2-45B4-4181-B981-958524CDB15D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DF07DA1E-CBB1-40A6-B9B2-B34186CCAB24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DF07DA1E-CBB1-40A6-B9B2-B34186CCAB24}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DF07DA1E-CBB1-40A6-B9B2-B34186CCAB24}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DF07DA1E-CBB1-40A6-B9B2-B34186CCAB24}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -68,6 +38,26 @@ Global
 		{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81AD4B31-28D3-4E46-9A28-0E659BECBBF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81AD4B31-28D3-4E46-9A28-0E659BECBBF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81AD4B31-28D3-4E46-9A28-0E659BECBBF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81AD4B31-28D3-4E46-9A28-0E659BECBBF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC239D76-B100-4431-8BD8-DCB4E7E82B9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC239D76-B100-4431-8BD8-DCB4E7E82B9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC239D76-B100-4431-8BD8-DCB4E7E82B9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC239D76-B100-4431-8BD8-DCB4E7E82B9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEDCEA19-E429-4C90-B99A-210A62765088}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEDCEA19-E429-4C90-B99A-210A62765088}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEDCEA19-E429-4C90-B99A-210A62765088}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEDCEA19-E429-4C90-B99A-210A62765088}.Release|Any CPU.Build.0 = Release|Any CPU
+		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -76,13 +66,5 @@ Global
 		SolutionGuid = {D8EF88DC-73EA-4C11-9356-1571AE75C6CF}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{1A66A1DA-9256-4404-A35B-08C284D07AA1} = {B7D91229-76BA-4B4B-A685-48C63F8E9AB8}
-		{023215AF-9419-42A0-BE3C-042FEA17B925} = {B7D91229-76BA-4B4B-A685-48C63F8E9AB8}
-		{E237C6E0-9EF8-4E4D-B524-8492219898EF} = {BB81AC27-C10D-4FF8-AC29-9D8AFCC915FC}
-		{99FE7BC4-D9E7-447F-9A68-D57D7C418A78} = {BB81AC27-C10D-4FF8-AC29-9D8AFCC915FC}
-		{D36B63B2-45B4-4181-B981-958524CDB15D} = {B7D91229-76BA-4B4B-A685-48C63F8E9AB8}
-		{DF07DA1E-CBB1-40A6-B9B2-B34186CCAB24} = {B7D91229-76BA-4B4B-A685-48C63F8E9AB8}
-		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0} = {B7D91229-76BA-4B4B-A685-48C63F8E9AB8}
-		{B2F3806B-8149-42C1-94A5-1C2D487AB9FB} = {B7D91229-76BA-4B4B-A685-48C63F8E9AB8}
 	EndGlobalSection
 EndGlobal

@@ -1,5 +1,6 @@
 namespace RpgCompanion.Host.Configuration;
 
+using Core;
 using Core.Events;
 using Delegates;
 using Descriptors;

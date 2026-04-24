@@ -1,11 +1,13 @@
 namespace RpgCompanion.Host.Configuration;
 
+using Core;
 using Core.Events;
 using Delegates;
 using Descriptors;
 using Microsoft.Extensions.DependencyInjection;
 
-internal class EffectConfiguration<TEvent>(IServiceCollection _services, EffectKey _key, EventKey _eventKey) where TEvent : IEvent
+internal class EffectConfiguration<TEvent>(IServiceCollection _services, EffectKey _key, EventKey _eventKey)
+    where TEvent : IEvent
 {
     private string? _displayName;
 
