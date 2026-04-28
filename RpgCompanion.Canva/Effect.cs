@@ -5,4 +5,4 @@ public interface IEffect<in T, out TResult>
     TResult Apply(T current);
 }
 
-public delegate TU Effect<in T, out TU>(T current);
+public delegate TResult Effect<in T, out TResult>(T current);
