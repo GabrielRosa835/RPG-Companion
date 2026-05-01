@@ -2,9 +2,17 @@
 
 public interface IPluginConfiguration
 {
-    public IPluginConfiguration AddActor<TActor>(Action<IActorConfiguration<TActor>> configure) where TActor : class;
-    public IPluginConfiguration AddEvent<TEvent>(Action<IEventConfiguration<TEvent>> configure) where TEvent : IEvent;
+    public IPluginConfiguration WithKey(PluginKey key);
     public IPluginConfiguration WithName(string name);
     public IPluginConfiguration WithVersion(string version);
-    public IPluginConfiguration WithInitialization(Action<IInitializationConfiguration> configure);
+    public IPluginConfiguration WithInitialization(Initialization initialization);
+
+    public IPluginConfiguration AddActor<TActor>(Configure<IActorConfiguration<TActor>> configure)
+        where TActor : class, IActor;
+
+    public IPluginConfiguration AddEvent<TEvent>(Configure<IEventConfiguration<TEvent>> configure)
+        where TEvent : IEvent;
+
+    public IPluginConfiguration AddRule<T>(Configure<IRuleConfiguration<T>> configure);
+    public IPluginConfiguration AddRule<T, U>(Configure<IRuleConfiguration<T, U>> configure);
 }

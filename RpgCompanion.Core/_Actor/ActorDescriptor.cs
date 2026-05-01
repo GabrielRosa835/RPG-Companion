@@ -1,6 +1,4 @@
-namespace RpgCompanion.Host;
-
-using Core;
+namespace RpgCompanion.Core;
 
 public class ActorDescriptor
 {

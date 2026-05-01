@@ -4,7 +4,7 @@ using Core;
 
 public record DealDamage(Defender Defender, int Damage) : IEvent
 {
-    public static Condition<DealDamage> ShouldApply = (e) => e.Damage > 0;
+    public static Rule<DealDamage, bool> ShouldApply = (e) => e.Damage > 0;
 
     public static Rule<DealDamage> Apply => (e) =>
     {

@@ -4,12 +4,11 @@ using System.Collections.Concurrent;
 using System.Runtime.Loader;
 using Configuration;
 using Core;
-using Microsoft.Extensions.DependencyInjection;
 
-public class PluginManager
+internal class PluginManager
 {
-    private ConcurrentBag<PluginKey> _plugins { get; } = [];
-    public IReadOnlyList<PluginKey> Plugins => _plugins.ToArray();
+    private ConcurrentBag<PluginMetadata> _plugins { get; } = [];
+    internal IReadOnlyList<PluginMetadata> Plugins => _plugins.ToArray();
 
     public Task LoadAll(IServiceCollection services, string pluginsFolder,
         CancellationToken cancellationToken = default)
@@ -57,20 +56,20 @@ public class PluginManager
                 throw new InvalidOperationException($"Could not find manifest for plugin {metadata.Resource}");
             }
 
-            var pluginBuilder = new PluginConfiguration(services, metadata);
-            manifest.Configure(pluginBuilder);
-            var descriptor = pluginBuilder.Build();
+            var configuration = new PluginConfiguration(services, metadata);
+            manifest.Configure(configuration);
+            PluginDescriptor descriptor = configuration.Build();
 
-            _plugins.Add(descriptor.Key);
+            metadata.Descriptor = descriptor;
+            _plugins.Add(metadata);
         },
         cancellationToken);
 
-    private Task Initialize(IServiceProvider provider, PluginKey key, CancellationToken cancellationToken = default) =>
+    private Task Initialize(IServiceProvider provider, PluginMetadata metadata, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
             {
-                var initializer = provider.GetRequiredKeyedService<IInitialization>(key);
-                var registry = provider.GetRequiredKeyedService<IRegistry>(key);
-                initializer.Initialize(registry);
+                var registry = provider.GetRequiredService<IRegistry>();
+                metadata.Initialization?.Invoke(registry, metadata.Descriptor.Key);
             },
             cancellationToken);
 }

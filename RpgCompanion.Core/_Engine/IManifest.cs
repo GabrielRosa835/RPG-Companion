@@ -2,5 +2,5 @@
 
 public interface IManifest
 {
-   void Configure(IPluginConfiguration plugin);
+    void Configure(IPluginConfiguration plugin);
 }

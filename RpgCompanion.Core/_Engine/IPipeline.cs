@@ -6,9 +6,3 @@ public interface IPipeline<TEventIn> where TEventIn : IEvent
     public IPipeline<TEventOut> FollowedBy<TEventOut>(Func<TEventIn, TEventOut> continuation)
         where TEventOut : IEvent;
 }
-
-
-public interface IPipeline
-{
-    public IPipeline<TEvent> Raise<TEvent>(TEvent e) where TEvent : IEvent;
-}

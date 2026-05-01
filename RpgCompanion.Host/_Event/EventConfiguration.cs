@@ -1,33 +1,44 @@
 namespace RpgCompanion.Host;
 
 using Core;
+using Microsoft.AspNetCore.Mvc;
 
 internal class EventConfiguration<TEvent>(
     IServiceCollection _services,
     PluginKey _plugin,
-    ISet<RuleKey> _pluginRules,
-    ISet<EffectKey> _pluginEffects)
+    ISet<RuleKey> _pluginRules)
     : IEventConfiguration<TEvent>
     where TEvent : IEvent
 {
-    private readonly EventKey _key = new();
-    private readonly HashSet<EffectKey> _effects = [];
+    private readonly List<Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _rules = [];
+    private EventKey? _key;
     private string? _displayName;
     private int? _priority;
 
-    internal EventDescriptor Build()
+    internal EventKey Build()
     {
+        KeyException.ThrowIfNull(_key);
+        foreach (Action lazyConfiguration in _lazyConfigurations)
+        {
+            lazyConfiguration();
+        }
         var descriptor = new EventDescriptor
         {
-            Key = _key,
-            Effects = _effects,
+            Key = _key.Value,
+            Plugin = _plugin,
             Rules = _rules,
             DisplayName = _displayName,
             Priority = _priority ?? 0,
         };
         _services.AddKeyedSingleton(_key, descriptor);
-        return descriptor;
+        return _key.Value;
+    }
+
+    public IEventConfiguration<TEvent> WithKey(EventKey<TEvent> key)
+    {
+        _key = key;
+        return this;
     }
 
     public IEventConfiguration<TEvent> WithName(string name)
@@ -36,29 +47,40 @@ internal class EventConfiguration<TEvent>(
         return this;
     }
 
-    public IEventConfiguration<TEvent> WithPriority(int priority)
+    public IEventConfiguration<TEvent> AddRule(Configure<IRuleConfiguration<TEvent>> configure)
     {
-        _priority = priority;
+        _lazyConfigurations.Add(() =>
+        {
+            var configuration = new RuleConfiguration<TEvent>(
+                _services: _services,
+                _plugin: _plugin,
+                _pluginRules: _pluginRules,
+                _event: _key,
+                _actor: null);
+            configure(configuration);
+            RuleKey key = configuration.Build();
+            _pluginRules.Add(key);
+            _rules.Add(key);
+        });
         return this;
     }
 
-    public IEventConfiguration<TEvent> AddRule(Action<IRuleConfiguration<TEvent>> configure)
+    public IEventConfiguration<TEvent> AddRule<U>(Configure<IRuleConfiguration<TEvent, U>> configure)
     {
-        var configuration = new RuleConfiguration<TEvent>(_services, _plugin, _key, null);
-        configure(configuration);
-        var descriptor = configuration.Build();
-        _pluginRules.Add(descriptor.Key);
-        _rules.Add(descriptor.Key);
-        return this;
-    }
-
-    public IEventConfiguration<TEvent> AddEffect(Action<IEffectConfiguration<TEvent>> configure)
-    {
-        var configuration = new EffectConfiguration<TEvent>(_services, _plugin, _key, null);
-        configure(configuration);
-        var descriptor = configuration.Build();
-        _pluginEffects.Add(descriptor.Key);
-        _effects.Add(descriptor.Key);
+        _lazyConfigurations.Add(() =>
+        {
+            var configuration = new RuleConfiguration<TEvent, U>(
+                _services: _services,
+                _plugin: _plugin,
+                _pluginRules: _pluginRules,
+                _conditionFor: null,
+                _event: _key,
+                _actor: null);
+            configure(configuration);
+            RuleKey key = configuration.Build();
+            _pluginRules.Add(key);
+            _rules.Add(key);
+        });
         return this;
     }
 }

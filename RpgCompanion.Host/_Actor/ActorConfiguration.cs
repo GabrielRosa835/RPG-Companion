@@ -1,31 +1,47 @@
 namespace RpgCompanion.Host;
 
 using Core;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public class ActorConfiguration<TActor>(
     IServiceCollection _services,
     PluginKey _plugin,
-    ISet<RuleKey> _pluginRules,
-    ISet<EffectKey> _pluginEffects)
-    : IActorConfiguration<TActor> where TActor : class
+    ISet<RuleKey> _pluginRules)
+    : IActorConfiguration<TActor> where TActor : class, IActor
 {
-    private readonly ActorKey _key = new();
+    private readonly List<Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _rules = [];
-    private readonly HashSet<EffectKey> _effects = [];
+    private Lifetime? _lifetime;
+    private ActorKey? _key;
     private string? _displayName;
 
-    public ActorDescriptor Build()
+    public ActorKey Build()
     {
-        var descriptor = new ActorDescriptor
+        KeyException.ThrowIfNull(_key);
+        foreach (Action lazyConfiguration in _lazyConfigurations)
         {
-            Key = _key,
+            lazyConfiguration();
+        }
+        _services.AddKeyedSingleton(_key, new ActorDescriptor
+        {
+            Key = _key.Value,
             Plugin = _plugin,
             DisplayName = _displayName,
-            Effects = _effects,
             Rules = _rules,
-        };
-        _services.AddKeyedSingleton(_key, descriptor);
-        return descriptor;
+        });
+        return _key.Value;
+    }
+
+    public IActorConfiguration<TActor> WithKey(ActorKey<TActor> key)
+    {
+        _key = key;
+        return this;
+    }
+
+    public IActorConfiguration<TActor> WithLifetime(Lifetime lifetime)
+    {
+        _lifetime = lifetime;
+        return this;
     }
 
     public IActorConfiguration<TActor> WithName(string name)
@@ -34,35 +50,57 @@ public class ActorConfiguration<TActor>(
         return this;
     }
 
-    public IActorConfiguration<TActor> Export(TActor instance)
+    public IActorConfiguration<TActor> Export()
     {
-        _services.AddKeyedSingleton(_key, instance);
+        _lazyConfigurations.Add(() =>
+        {
+            if (_lifetime == Lifetime.Persistent)
+            {
+                _services.TryAddKeyedSingleton<TActor>(_key);
+                _services.TryAddSingleton<TActor>();
+                return;
+            }
+            // Defaults to transient
+            _services.TryAddKeyedTransient<TActor>(_key);
+            _services.TryAddTransient<TActor>();
+        });
         return this;
     }
 
-    public IActorConfiguration<TActor> Export(Func<IRegistry, ActorKey, TActor> factory)
+    public IActorConfiguration<TActor> AddRule<U>(Configure<IRuleConfiguration<TActor, U>> configure)
     {
-        _services.AddKeyedSingleton(_key, (sp, key) => factory(sp.AsRegistry(), (ActorKey) key));
+        _lazyConfigurations.Add(() =>
+        {
+            var configuration = new RuleConfiguration<TActor, U>(
+                _services: _services,
+                _plugin: _plugin,
+                _pluginRules: _pluginRules,
+                _conditionFor: null,
+                _event: null,
+                _actor: _key);
+            configure(configuration);
+            RuleKey key = configuration.Build();
+            _pluginRules.Add(key);
+            _rules.Add(key);
+        });
         return this;
     }
 
-    public IActorConfiguration<TActor> AddRule(Action<IRuleConfiguration<TActor>> configure)
+    public IActorConfiguration<TActor> AddRule(Configure<IRuleConfiguration<TActor>> configure)
     {
-        var configuration = new RuleConfiguration<TActor>(_services, _plugin, null, _key);
-        configure(configuration);
-        var descriptor = configuration.Build();
-        _pluginRules.Add(descriptor.Key);
-        _rules.Add(descriptor.Key);
-        return this;
-    }
-
-    public IActorConfiguration<TActor> AddEffect(Action<IEffectConfiguration<TActor>> configure)
-    {
-        var configuration = new EffectConfiguration<TActor>(_services, _plugin, null, _key);
-        configure(configuration);
-        var descriptor = configuration.Build();
-        _pluginEffects.Add(descriptor.Key);
-        _effects.Add(descriptor.Key);
+        _lazyConfigurations.Add(() =>
+        {
+            var configuration = new RuleConfiguration<TActor>(
+                _services: _services,
+                _plugin: _plugin,
+                _pluginRules: _pluginRules,
+                _event: null,
+                _actor: _key);
+            configure(configuration);
+            RuleKey key = configuration.Build();
+            _pluginRules.Add(key);
+            _rules.Add(key);
+        });
         return this;
     }
 }

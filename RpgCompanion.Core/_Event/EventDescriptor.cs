@@ -1,8 +1,6 @@
-namespace RpgCompanion.Host;
+namespace RpgCompanion.Core;
 
-using Core;
-
-internal class EventDescriptor
+public class EventDescriptor
 {
     public EventKey Key { get; init; }
     public PluginKey Plugin { get; init; }

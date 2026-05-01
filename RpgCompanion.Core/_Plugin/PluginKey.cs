@@ -1,8 +1,6 @@
-namespace RpgCompanion.Host;
+namespace RpgCompanion.Core;
 
-public readonly record struct PluginKey(string Value)
+public readonly record struct PluginKey(string Content)
 {
-    public PluginKey() : this(Guid.NewGuid().ToString())
-    {
-    }
+    public static implicit operator PluginKey(string content) => new(content);
 }
