@@ -2,15 +2,26 @@ namespace RpgCompanion.DnD;
 
 using Core;
 
-public record DiceRoll(Dice Dice, int Modifier) : IEvent
+public static class DiceRoll
 {
-    public int Result { get; private set; }
-
-    public static Rule<DiceRoll> Apply = (DiceRoll e) =>
+    public record Event(Dice Dice, int Modifier) : IEvent
     {
-        Console.WriteLine($"Realizando efeito de rolagem: \n   Dado: {e.Dice}");
-        e.Result = e.Dice.Roll() + e.Modifier;
-        Console.WriteLine($"Rolagem realizada com resultado: {e.Result}");
-        return e;
-    };
+        public static EventKey<Event> Key = nameof(DiceRoll);
+        public int Result { get; set; }
+    }
+
+    public static class Apply
+    {
+        public static RuleKey<Event> Key = typeof(Apply).FullName!;
+        public static Rule<Event> Rule = e =>
+        {
+            Console.WriteLine($"""
+               Realizando efeito de rolagem:
+               Dado: {e.Dice}
+               """);
+            e.Result = e.Dice.Roll() + e.Modifier;
+            Console.WriteLine($"Rolagem realizada com resultado: {e.Result}");
+            return e;
+        };
+    }
 }

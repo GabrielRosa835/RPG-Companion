@@ -2,21 +2,29 @@ namespace RpgCompanion.DnD;
 
 using Core;
 
-public record Attack([Key(Attack.Key)] Attacker Attacker, Defender Defender) : IEvent
+public static class Attack
 {
-    public const string Key = nameof(Attack);
+    public record Event(Attacker Attacker, Defender Defender) : IEvent
+    {
+        public static EventKey<Event> Key = typeof(Event).FullName!;
+    }
 
-    public static Rule<Attack> DoAttack(ITrigger trigger) => (Attack e) =>
+    public class Definition(ITrigger trigger) : IRuleDefinition<Event>
     {
-        Console.WriteLine(
-            $"Realizando efeito de ataque: \n   Atacante: {e.Attacker.Name} \n   Defensor: {e.Defender.Name}");
-        trigger
-            .Raise(new DiceRoll(e.Attacker.Weapon!.DamageDice, e.Attacker.AttackModifier))
-            .FollowedBy(roll => new DealDamage(e.Defender, roll.Result));
-        return e;
-    };
-    public class Definition(ITrigger trigger) : IRuleDefinition<Attack>
-    {
-        public Rule<Attack> Compose(RuleKey<Attack> key) => DoAttack(trigger);
+        public static RuleKey<Event> Key = typeof(Definition).FullName!;
+        public Rule<Event> Compose() => e =>
+        {
+            Console.WriteLine($"""
+                Realizando efeito de ataque:
+                Atacante: {e.Attacker.Name}
+                Defensor: {e.Defender.Name}
+                """);
+            var diceRoll = new DiceRoll.Event(e.Attacker.Weapon!.DamageDice, e.Attacker.AttackModifier);
+
+            trigger.Raise(diceRoll, pipeline => pipeline
+                .Then(roll => new DealDamage.Event(e.Defender, roll.Result)));
+
+            return e;
+        };
     }
 }

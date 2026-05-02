@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Man
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Quartz", "RpgCompanion.Prototypes.Quartz\RpgCompanion.Prototypes.Quartz.csproj", "{C34EE8D9-472C-4675-A4D9-873923A93DC0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.MediatR", "RpgCompanion.Prototypes.MediatR\RpgCompanion.Prototypes.MediatR.csproj", "{D883DF60-D4BB-4FEA-85C0-E9823690081E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

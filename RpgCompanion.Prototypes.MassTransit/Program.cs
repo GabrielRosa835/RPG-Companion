@@ -1,41 +1,41 @@
-var builder = WebApplication.CreateBuilder(args);
+using MassTransit;
+using RpgCompanion.Core;
+using RpgCompanion.Host.Plugins;
+using RpgCompanion.Prototypes.MassTransit;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+var builder = Host.CreateApplicationBuilder(args);
 
-var app = builder.Build();
+builder.Services.AddSingleton<IComponentGraph, ComponentGraph>();
+builder.Services.AddTransient<IRegistry, Registry>();
+builder.Services.AddSingleton<ITrigger, Trigger>();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+string pluginsFolder = builder.Configuration["PluginsFolder"]!;
+var pluginsManager = new PluginManager();
+
+builder.Services.AddSingleton(pluginsManager);
+await pluginsManager.LoadAll(builder.Services, pluginsFolder);
+
+// 2. Build a temporary ServiceProvider to resolve the ComponentGraph.
+// This allows us to inspect the loaded events before configuring MassTransit.
+await using (var tempProvider = builder.Services.BuildServiceProvider())
 {
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    var componentGraph = tempProvider.GetRequiredService<IComponentGraph>();
+    builder.Services.AddMassTransit(massTransit =>
     {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int) (TemperatureC / 0.5556);
+        foreach (var eventDescriptor in componentGraph.Events)
+        {
+            var closedConsumerType = typeof(EventRaisedConsumer<>).MakeGenericType(eventDescriptor.Type);
+            massTransit.AddConsumer(closedConsumerType);
+        }
+        massTransit.UsingInMemory((context, configuration) => configuration.ConfigureEndpoints(context));
+    });
 }
+
+
+var host = builder.Build();
+
+await host.StartAsync();
+
+await pluginsManager.InitializeAll(host.Services);
+
+await host.WaitForShutdownAsync();

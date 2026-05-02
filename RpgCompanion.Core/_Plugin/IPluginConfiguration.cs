@@ -11,7 +11,7 @@ public interface IPluginConfiguration
         where TActor : class, IActor;
 
     public IPluginConfiguration AddEvent<TEvent>(Configure<IEventConfiguration<TEvent>> configure)
-        where TEvent : IEvent;
+        where TEvent : class, IEvent;
 
     public IPluginConfiguration AddRule<T>(Configure<IRuleConfiguration<T>> configure);
     public IPluginConfiguration AddRule<T, U>(Configure<IRuleConfiguration<T, U>> configure);

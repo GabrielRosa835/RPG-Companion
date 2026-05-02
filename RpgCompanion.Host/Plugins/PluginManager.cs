@@ -1,4 +1,4 @@
-namespace RpgCompanion.Host.Plugins;
+namespace RpgCompanion.Host;
 
 using System.Collections.Concurrent;
 using System.Runtime.Loader;
@@ -58,20 +58,22 @@ internal class PluginManager
 
             var configuration = new PluginConfiguration(services, metadata);
             manifest.Configure(configuration);
-            PluginDescriptor descriptor = configuration.Build();
-
-            metadata.Descriptor = descriptor;
+            metadata.Descriptor = configuration.Build();
             _plugins.Add(metadata);
         },
         cancellationToken);
 
-    private Task Initialize(IServiceProvider provider, PluginMetadata metadata, CancellationToken cancellationToken = default) =>
-        Task.Run(() =>
-            {
-                var registry = provider.GetRequiredService<IRegistry>();
-                metadata.Initialization?.Invoke(registry, metadata.Descriptor.Key);
-            },
-            cancellationToken);
+    private Task Initialize(IServiceProvider provider, PluginMetadata metadata,
+        CancellationToken cancellationToken = default)
+    {
+        var registry = provider.GetRequiredService<IRegistry>();
+        Console.WriteLine($"Initializing plugin {metadata.Resource}");
+        return Task.Run(() =>
+        {
+            metadata.Initialization?.Invoke(registry, metadata.Descriptor.Key);
+            metadata.Initialized = true;
+        }, cancellationToken);
+    }
 }
 
 file static class SelfUtils

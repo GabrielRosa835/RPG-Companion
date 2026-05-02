@@ -1,7 +1,6 @@
 namespace RpgCompanion.Core;
 
-
 public interface ITrigger
 {
-    public IPipeline<TEvent> Raise<TEvent>(TEvent e) where TEvent : IEvent;
+    void Raise<TEvent>(TEvent e, Configure<IPipeline<TEvent>>? pipeline = null) where TEvent : IEvent;
 }
