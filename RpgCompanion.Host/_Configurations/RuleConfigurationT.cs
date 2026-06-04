@@ -10,23 +10,22 @@ internal class RuleConfiguration<T>(
     ActorKey? _actor)
     : IRuleConfiguration<T>
 {
-    private readonly List<Action> _lazyConfigurations = [];
+    private readonly List<System.Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _conditions = [];
-    private RuleKey? _key;
+    private RuleKey _key = Guid.NewGuid().ToString();
     private string? _displayName;
     private string? _description;
     private double? _order;
 
     internal RuleKey Build()
     {
-        KeyException.ThrowIfNull(_key);
-        foreach (Action lazyConfiguration in _lazyConfigurations)
+        foreach (System.Action lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
         var descriptor = new RuleDescriptor
         {
-            Key = _key.Value,
+            Key = _key,
             Order = _order ?? 0,
             DisplayName = _displayName,
             Description = _description,
@@ -41,7 +40,7 @@ internal class RuleConfiguration<T>(
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
-        return _key.Value;
+        return _key;
     }
 
     public IRuleConfiguration<T> WithKey(RuleKey<T> key)
@@ -75,7 +74,7 @@ internal class RuleConfiguration<T>(
             var configuration = new ConditionConfiguration<T>(
                 _services: _services,
                 _plugin: _plugin,
-                _for: _key!.Value);
+                _for: _key);
             configure(configuration);
             RuleKey key = configuration.Build();
             _conditions.Add(key);
@@ -84,7 +83,7 @@ internal class RuleConfiguration<T>(
         return this;
     }
 
-    public IRuleConfiguration<T> Export(Rule<T> instance)
+    public IRuleConfiguration<T> Export(IRule<T> instance)
     {
         _lazyConfigurations.Add(() =>
         {
@@ -94,15 +93,14 @@ internal class RuleConfiguration<T>(
         return this;
     }
 
-    public IRuleConfiguration<T> Export<TDefinition>() where TDefinition : class, IRuleDefinition<T>
+    public IRuleConfiguration<T> Export<TRule>() where TRule : class, IRule<T>
     {
         _lazyConfigurations.Add(() =>
         {
-            _services.AddKeyedTransient<TDefinition>(_key);
-            _services.AddTransient<TDefinition>();
-            _services.AddKeyedTransient<Rule<T>>(_key, (sp, key) =>
-                sp.GetRequiredKeyedService<TDefinition>(key).Compose());
-            _services.AddTransient<Rule<T>>(sp => sp.GetRequiredService<TDefinition>().Compose());
+            _services.AddKeyedTransient<IRule<T>>(_key, (sp, key) => sp.GetRequiredKeyedService<TRule>(key));
+            _services.AddTransient<IRule<T>>(sp => sp.GetRequiredService<TRule>());
+            _services.AddKeyedTransient<TRule>(_key);
+            _services.AddTransient<TRule>();
         });
         return this;
     }

@@ -17,3 +17,11 @@ public class Registry(IServiceProvider _provider) : IRegistry
 
     public Rule<T, U> Get<T, U>(RuleKey<T, U> key) => _provider.GetRequiredKeyedService<Rule<T, U>>(key);
 }
+
+public static class ServiceProviderExtensions
+{
+    public static IRegistry AsRegistry(this IServiceProvider provider)
+    {
+        return new Registry(provider);
+    }
+}

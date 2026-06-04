@@ -8,26 +8,24 @@ public class ActorConfiguration<TActor>(
     ISet<RuleKey> _pluginRules)
     : IActorConfiguration<TActor> where TActor : class, IActor
 {
-    private readonly List<Action> _lazyConfigurations = [];
+    private readonly List<System.Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _actions = [];
     private readonly HashSet<RuleKey> _rules = [];
-    private ActorLifetime? _lifetime;
-    private ActorLifetime _registeredLifetime = ActorLifetime.Immediate;
-    private ActorKey? _key;
+    private ActorLifetime _lifetime = ActorLifetime.Immediate;
+    private ActorKey _key = Guid.NewGuid().ToString();
     private string? _displayName;
     private string? _description;
 
     public ActorKey Build()
     {
-        KeyException.ThrowIfNull(_key);
-        foreach (Action lazyConfiguration in _lazyConfigurations)
+        foreach (System.Action lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
         var descriptor = new ActorDescriptor
         {
-            Key = _key.Value,
-            Lifetime = _registeredLifetime,
+            Key = _key,
+            Lifetime = _lifetime,
             DisplayName = _displayName,
             Description = _description,
             Type = typeof(TActor),
@@ -40,104 +38,88 @@ public class ActorConfiguration<TActor>(
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
-        return _key.Value;
+        return _key;
     }
 
-    public IActorConfiguration<TActor> WithKey(ActorKey<TActor> key)
-    {
-        _key = key;
-        return this;
-    }
+    public IActorConfiguration<TActor> WithKey(ActorKey<TActor> key) => Do(() => _key = key);
 
-    public IActorConfiguration<TActor> WithLifetime(ActorLifetime actorLifetime)
-    {
-        _lifetime = actorLifetime;
-        return this;
-    }
+    public IActorConfiguration<TActor> WithLifetime(ActorLifetime actorLifetime) => Do(() => _lifetime = actorLifetime);
 
-    public IActorConfiguration<TActor> WithName(string name)
-    {
-        _displayName = name;
-        return this;
-    }
+    public IActorConfiguration<TActor> WithName(string name) => Do(() => _displayName = name);
 
-    public IActorConfiguration<TActor> WithDescription(string description)
-    {
-        _description = description;
-        return this;
-    }
+    public IActorConfiguration<TActor> WithDescription(string description) => Do(() => _description = description);
 
     public IActorConfiguration<TActor> AddAction<TEvent>(Configure<IActionConfiguration<TActor, TEvent>> configure)
-        where TEvent : class, IEvent
+        where TEvent : class, IEvent => DoLazy(() =>
     {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new ActionConfiguration<TActor, TEvent>(
-                _services: _services,
-                _plugin: _plugin,
-                _pluginRules: _pluginRules,
-                _event: null,
-                _actor: _key);
-            configure(configuration);
-            RuleKey key = configuration.Build();
-            _pluginRules.Add(key);
-            _rules.Add(key);
-        });
-        return this;
-    }
+        var configuration = new ActionConfiguration<TActor, TEvent>(
+            _services: _services,
+            _plugin: _plugin,
+            _pluginRules: _pluginRules,
+            _event: null,
+            _actor: _key);
+        configure(configuration);
+        RuleKey key = configuration.Build();
+        _pluginRules.Add(key);
+        _rules.Add(key);
+    });
 
-    public IActorConfiguration<TActor> Export()
+    public IActorConfiguration<TActor> Export() => DoLazy(() =>
     {
-        _lazyConfigurations.Add(() =>
+        switch (_lifetime)
         {
-            if (_lifetime == ActorLifetime.Persistent)
-            {
+            case ActorLifetime.Persistent:
                 _services.AddKeyedSingleton<TActor>(_key);
                 _services.AddSingleton<TActor>();
-                _registeredLifetime = ActorLifetime.Persistent;
                 return;
-            }
-            // Defaults to transient
-            _services.AddKeyedTransient<TActor>(_key);
-            _services.AddTransient<TActor>();
-            _registeredLifetime = ActorLifetime.Immediate;
-        });
+            case ActorLifetime.Temporary:
+                _services.AddKeyedScoped<TActor>(_key);
+                _services.AddScoped<TActor>();
+                return;
+            case ActorLifetime.Immediate:
+            default:
+                _services.AddKeyedTransient<TActor>(_key);
+                _services.AddTransient<TActor>();
+                break;
+        }
+    });
+
+    public IActorConfiguration<TActor> AddRule<U>(Configure<IRuleConfiguration<TActor, U>> configure) => DoLazy(() =>
+    {
+        var configuration = new RuleConfiguration<TActor, U>(
+            _services: _services,
+            _plugin: _plugin,
+            _pluginRules: _pluginRules,
+            _event: null,
+            _actor: _key);
+        configure(configuration);
+        RuleKey key = configuration.Build();
+        _pluginRules.Add(key);
+        _rules.Add(key);
+    });
+
+    public IActorConfiguration<TActor> AddRule(Configure<IRuleConfiguration<TActor>> configure) => DoLazy(() =>
+    {
+        var configuration = new RuleConfiguration<TActor>(
+            _services: _services,
+            _plugin: _plugin,
+            _pluginRules: _pluginRules,
+            _event: null,
+            _actor: _key);
+        configure(configuration);
+        RuleKey key = configuration.Build();
+        _pluginRules.Add(key);
+        _rules.Add(key);
+    });
+
+    private IActorConfiguration<TActor> Do(System.Action action)
+    {
+        action();
         return this;
     }
-
-    public IActorConfiguration<TActor> AddRule<U>(Configure<IRuleConfiguration<TActor, U>> configure)
+    private IActorConfiguration<TActor> DoLazy(System.Action action)
     {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new RuleConfiguration<TActor, U>(
-                _services: _services,
-                _plugin: _plugin,
-                _pluginRules: _pluginRules,
-                _event: null,
-                _actor: _key);
-            configure(configuration);
-            RuleKey key = configuration.Build();
-            _pluginRules.Add(key);
-            _rules.Add(key);
-        });
-        return this;
-    }
-
-    public IActorConfiguration<TActor> AddRule(Configure<IRuleConfiguration<TActor>> configure)
-    {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new RuleConfiguration<TActor>(
-                _services: _services,
-                _plugin: _plugin,
-                _pluginRules: _pluginRules,
-                _event: null,
-                _actor: _key);
-            configure(configuration);
-            RuleKey key = configuration.Build();
-            _pluginRules.Add(key);
-            _rules.Add(key);
-        });
+        _lazyConfigurations.Add(action);
         return this;
     }
 }

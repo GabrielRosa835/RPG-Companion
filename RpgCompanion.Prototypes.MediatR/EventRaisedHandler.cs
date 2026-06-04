@@ -1,26 +1,39 @@
-namespace RpgCompanion.Prototypes.MediatR;
+namespace RpgCompanion.Host;
 
 using Core;
-using global::MediatR;
+using MediatR;
+
+public interface IInternalEventHandler
+{
+    Task HandleAsync(EventRaisedEvent e, CancellationToken cancellationToken);
+}
+
+public class EventRaisedRouter(IServiceProvider serviceProvider) : INotificationHandler<EventRaisedEvent>
+{
+    public Task Handle(EventRaisedEvent message, CancellationToken cancellationToken)
+    {
+        var eventType = message.Event.GetType();
+        var handlerType = typeof(EventRaisedHandler<>).MakeGenericType(eventType);
+        var handler = (IInternalEventHandler)ActivatorUtilities.CreateInstance(serviceProvider, handlerType);
+        return handler.HandleAsync(message, cancellationToken);
+    }
+}
 
 public class EventRaisedHandler<TEvent>(IServiceProvider _serviceProvider, IComponentGraph _components)
-    : INotificationHandler<EventRaisedEvent<TEvent>>
+    : IInternalEventHandler
     where TEvent : IEvent
 {
-    public async Task Handle(EventRaisedEvent<TEvent> message, CancellationToken cancellationToken)
+    public async Task HandleAsync(EventRaisedEvent e, CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var serviceProvider = scope.ServiceProvider;
         var mediator = serviceProvider.GetRequiredService<IMediator>();
 
-        var currentState = message.Event;
+        var currentState = (TEvent) e.Event;
         var pipelineSteps = new List<(double Order, Func<TEvent, Task<TEvent>> Execute)>();
 
-        var descriptor = _components.Events.FirstOrDefault(d => d.Type == typeof(TEvent))
-            ?? throw new InvalidOperationException($"Could not find a descriptor for event of type {typeof(TEvent)}");
-
-        var ruleKeys = descriptor.Connections.Rules;
-        var actionKeys = descriptor.Connections.Actions;
+        var ruleKeys = e.Descriptor.Connections.Rules;
+        var actionKeys = e.Descriptor.Connections.Actions;
 
         foreach (var ruleKey in ruleKeys)
         {
@@ -55,8 +68,7 @@ public class EventRaisedHandler<TEvent>(IServiceProvider _serviceProvider, IComp
                     var generatedEvent = ruleDelegate(state);
                     if (generatedEvent != null)
                     {
-                        // MediatR can publish raw objects directly
-                        await mediator.Publish((object)generatedEvent, cancellationToken);
+                        await mediator.Publish(generatedEvent, cancellationToken);
                     }
                 }
                 return state;
@@ -68,22 +80,24 @@ public class EventRaisedHandler<TEvent>(IServiceProvider _serviceProvider, IComp
             currentState = await step.Execute(currentState);
         }
 
-        if (!message.Transitions.TryDequeue(out var nextTransition))
+        if (!e.Transitions.TryDequeue(out var nextTransition))
         {
             return;
         }
 
-        var transitionRule = _serviceProvider.GetRequiredKeyedService<Rule<TEvent, IEvent>>(nextTransition);
-        IEvent nextEvent = transitionRule(currentState);
+        IEvent nextEvent = nextTransition(currentState);
 
         var nextEventType = nextEvent.GetType();
-        var wrapperType = typeof(EventRaisedEvent<>).MakeGenericType(nextEventType);
         var nextDescriptor = _components.Events.FirstOrDefault(d => d.Type == nextEventType)
             ?? throw new InvalidOperationException($"Could not find a descriptor for event of type {nextEventType}");
 
-        var nextMessage = Activator.CreateInstance(wrapperType, nextEvent, nextDescriptor, message.Transitions);
+        var nextMessage = new EventRaisedEvent
+        {
+            Event = nextEvent,
+            Descriptor = nextDescriptor,
+            Transitions = e.Transitions
+        };
 
-        // MediatR naturally resolves the runtime type when cast to object
-        await mediator.Publish((object)nextMessage!, cancellationToken);
+        await mediator.Publish(nextMessage, cancellationToken);
     }
 }

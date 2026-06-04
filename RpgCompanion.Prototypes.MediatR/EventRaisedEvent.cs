@@ -3,9 +3,9 @@ namespace RpgCompanion.Prototypes.MediatR;
 using Core;
 using global::MediatR;
 
-public record EventRaisedEvent<TEvent> : INotification where TEvent : IEvent
+public record EventRaisedEvent : INotification
 {
-    public TEvent Event { get; init; } = default!;
-    public EventKey DescriptorKey { get; init; } = default!;
-    public Queue<RuleKey> Transitions { get; init; } = [];
+    public IEvent Event { get; init; } = default!;
+    public EventDescriptor Descriptor { get; init; } = default!;
+    public Queue<Func<IEvent, IEvent>> Transitions { get; init; } = [];
 }

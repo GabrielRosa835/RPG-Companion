@@ -1,6 +1,7 @@
 namespace RpgCompanion.Host;
 
 using Core;
+using Action = System.Action;
 
 public class ConditionConfiguration<T>(
     IServiceCollection _services,
@@ -9,20 +10,19 @@ public class ConditionConfiguration<T>(
     : IConditionConfiguration<T>
 {
     private readonly List<Action> _lazyConfigurations = [];
-    private RuleKey? _key;
+    private RuleKey _key = Guid.NewGuid().ToString();
     private string? _displayName;
     private string? _description;
 
     public RuleKey Build()
     {
-        KeyException.ThrowIfNull(_key);
         foreach (Action lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
         var descriptor = new RuleDescriptor
         {
-            Key = _key.Value,
+            Key = _key,
             Order = 0,
             Description =  _description,
             DisplayName = _displayName,
@@ -30,14 +30,14 @@ public class ConditionConfiguration<T>(
             {
                 Event = null,
                 Actor = null,
-                Conditions = null,
+                Conditions = new HashSet<RuleKey>(),
                 ForRule = _for,
                 Plugin = _plugin,
             }
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
-        return _key.Value;
+        return _key;
     }
 
     public IConditionConfiguration<T> WithKey(RuleKey<T, bool> key)
@@ -58,7 +58,7 @@ public class ConditionConfiguration<T>(
         return this;
     }
 
-    public IConditionConfiguration<T> Export(Rule<T, bool> instance)
+    public IConditionConfiguration<T> Export(IRule<T, bool> instance)
     {
         _lazyConfigurations.Add(() =>
         {
@@ -68,15 +68,14 @@ public class ConditionConfiguration<T>(
         return this;
     }
 
-    public IConditionConfiguration<T> Export<TDefinition>() where TDefinition : class, IRuleDefinition<T, bool>
+    public IConditionConfiguration<T> Export<TRule>() where TRule : class, IRule<T, bool>
     {
         _lazyConfigurations.Add(() =>
         {
-            _services.AddKeyedTransient<TDefinition>(_key);
-            _services.AddTransient<TDefinition>();
-            _services.AddKeyedTransient<Rule<T, bool>>(_key,
-                (sp, key) => sp.GetRequiredService<TDefinition>().Compose());
-            _services.AddTransient<Rule<T, bool>>(sp => sp.GetRequiredService<TDefinition>().Compose());
+            _services.AddKeyedTransient<TRule>(_key);
+            _services.AddTransient<TRule>();
+            _services.AddKeyedTransient<IRule<T, bool>>(_key, (sp, key) => sp.GetRequiredKeyedService<TRule>(key));
+            _services.AddTransient<IRule<T, bool>>(sp => sp.GetRequiredService<TRule>());
         });
         return this;
     }

@@ -2,7 +2,7 @@ namespace RpgCompanion.Core;
 
 public class RuleDescriptor
 {
-    public RuleKey Key { get; init; }
+    public RuleKey Key { get; init; } = default!;
     public RuleConnections Connections { get; init; } = default!;
     public double Order { get; init; }
     public string? DisplayName { get; init; }

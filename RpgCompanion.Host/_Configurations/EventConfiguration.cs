@@ -10,23 +10,22 @@ internal class EventConfiguration<TEvent>(
     : IEventConfiguration<TEvent>
     where TEvent : class, IEvent
 {
-    private readonly List<Action> _lazyConfigurations = [];
+    private readonly List<System.Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _actions = [];
     private readonly HashSet<RuleKey> _rules = [];
-    private EventKey? _key;
+    private EventKey _key = Guid.NewGuid().ToString();
     private string? _displayName;
     private string? _description;
 
     internal EventKey Build()
     {
-        KeyException.ThrowIfNull(_key);
-        foreach (Action lazyConfiguration in _lazyConfigurations)
+        foreach (System.Action lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
         var descriptor = new EventDescriptor
         {
-            Key = _key.Value,
+            Key = _key,
             DisplayName = _displayName,
             Description = _description,
             Type = typeof(TEvent),
@@ -39,7 +38,7 @@ internal class EventConfiguration<TEvent>(
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
-        return _key.Value;
+        return _key;
     }
 
     public IEventConfiguration<TEvent> WithKey(EventKey<TEvent> key)

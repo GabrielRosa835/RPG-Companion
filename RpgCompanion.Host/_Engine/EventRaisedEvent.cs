@@ -1,11 +1,18 @@
 namespace RpgCompanion.Host;
 
-using Core;
-using global::MediatR;
+using System.Text.Json;
+using RpgCompanion.Core;
 
-public record EventRaisedEvent : INotification
+internal record EventRaisedEvent
 {
-    public IEvent Event { get; init; } = default!;
-    public EventDescriptor Descriptor { get; init; } = default!;
-    public Queue<Func<IEvent, IEvent>> Transitions { get; init; } = [];
+    public Guid Guid { get; init; } = Guid.CreateVersion7();
+    public JsonElement Data { get; init; }
+    public EventKey Key { get; init; }
+    public List<Transition> Transitions { get; init; } = [];
+}
+
+internal record Transition
+{
+    public RuleKey Key { get; init; }
+    public List<Transition> Chain { get; init; } = [];
 }

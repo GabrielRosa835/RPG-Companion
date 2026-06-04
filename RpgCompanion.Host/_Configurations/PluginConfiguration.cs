@@ -8,8 +8,8 @@ internal class PluginConfiguration(
     PluginMetadata _metadata)
     : IPluginConfiguration
 {
-    private readonly List<Action> _lazyConfigurations = [];
-    private PluginKey? _key;
+    private readonly List<System.Action> _lazyConfigurations = [];
+    private PluginKey _key = Guid.NewGuid().ToString();
 
     private readonly HashSet<RuleKey> _rules = [];
     private readonly HashSet<EventKey> _events = [];
@@ -20,21 +20,21 @@ internal class PluginConfiguration(
 
     public PluginDescriptor Build()
     {
-        KeyException.ThrowIfNull(_key);
-        foreach (Action lazyConfiguration in _lazyConfigurations)
+        foreach (System.Action lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
         var descriptor = new PluginDescriptor
         {
-            Key = _key.Value,
+            Key = _key,
             Name = _name,
             Version = _version,
             Events = _events,
             Rules = _rules,
             Actors = _actors,
         };
-        _services.TryAddKeyedSingleton(_key, descriptor);
+        _services.AddKeyedSingleton(_key, descriptor);
+        _services.AddSingleton(descriptor);
         return descriptor;
     }
 
@@ -69,7 +69,7 @@ internal class PluginConfiguration(
         {
             var configuration = new ActorConfiguration<TActor>(
                 _services: _services,
-                _plugin: _key!.Value,
+                _plugin: _key,
                 _pluginRules: _rules);
             configure(configuration);
             ActorKey key = configuration.Build();
@@ -85,7 +85,7 @@ internal class PluginConfiguration(
         {
             var configuration = new EventConfiguration<TEvent>(
                 _services: _services,
-                _plugin: _key!.Value,
+                _plugin: _key,
                 _pluginRules: _rules);
             configure(configuration);
             EventKey key = configuration.Build();
@@ -100,7 +100,7 @@ internal class PluginConfiguration(
         {
             var configuration = new RuleConfiguration<T>(
                 _services: _services,
-                _plugin: _key!.Value,
+                _plugin: _key,
                 _pluginRules: _rules,
                 _event: null,
                 _actor: null);
@@ -117,7 +117,7 @@ internal class PluginConfiguration(
         {
             var configuration = new RuleConfiguration<T, U>(
                 _services: _services,
-                _plugin: _key!.Value,
+                _plugin: _key,
                 _pluginRules: _rules,
                 _event: null,
                 _actor: null);

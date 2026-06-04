@@ -1,106 +1,99 @@
 namespace RpgCompanion.Host;
 
-using Core;
-using MediatR;
+using System.Text.Json;
+using MassTransit;
+using RpgCompanion.Core;
 
-public interface IInternalEventHandler
-{
-    Task HandleAsync(EventRaisedEvent e, CancellationToken cancellationToken);
-}
-
-public class EventRaisedRouter(IServiceProvider serviceProvider) : INotificationHandler<EventRaisedEvent>
-{
-    public Task Handle(EventRaisedEvent message, CancellationToken cancellationToken)
-    {
-        var eventType = message.Event.GetType();
-        var handlerType = typeof(EventRaisedHandler<>).MakeGenericType(eventType);
-        var handler = (IInternalEventHandler)ActivatorUtilities.CreateInstance(serviceProvider, handlerType);
-        return handler.HandleAsync(message, cancellationToken);
-    }
-}
-
-public class EventRaisedHandler<TEvent>(IServiceProvider _serviceProvider, IComponentGraph _components)
-    : IInternalEventHandler
+internal class EventRaisedHandler<TEvent>(IServiceScopeFactory _scopeFactory, IComponentGraph _components)
     where TEvent : IEvent
 {
-    public async Task HandleAsync(EventRaisedEvent e, CancellationToken cancellationToken)
+    public async Task Handle(TEvent e, IEnumerable<Transition> transitions, IPublishEndpoint publisher, CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = _scopeFactory.CreateScope();
         var serviceProvider = scope.ServiceProvider;
-        var mediator = serviceProvider.GetRequiredService<IMediator>();
 
-        var currentState = (TEvent) e.Event;
         var pipelineSteps = new List<(double Order, Func<TEvent, Task<TEvent>> Execute)>();
 
-        var descriptor = _components.Events.FirstOrDefault(d => d.Type == typeof(TEvent))
-            ?? throw new InvalidOperationException($"Could not find a descriptor for event of type {typeof(TEvent)}");
-
+        var descriptor = _components.Events.Find<TEvent>();
         var ruleKeys = descriptor.Connections.Rules;
         var actionKeys = descriptor.Connections.Actions;
 
         foreach (var ruleKey in ruleKeys)
         {
             var ruleDescriptor = serviceProvider.GetRequiredKeyedService<RuleDescriptor>(ruleKey);
-            var ruleDelegate = serviceProvider.GetRequiredKeyedService<Rule<TEvent>>(ruleKey);
-            pipelineSteps.Add((ruleDescriptor.Order, state =>
-            {
-                if (ruleDescriptor.Connections.Conditions.All(c =>
-                    {
-                        var conditionDelegate = serviceProvider.GetKeyedService<Rule<TEvent, bool>>(c);
-                        return conditionDelegate == null || conditionDelegate(state);
-                    }))
-                {
-                    state = ruleDelegate(state);
-                }
-                return Task.FromResult(state);
-            }));
+            var rule = serviceProvider.GetRequiredKeyedService<IRule<TEvent>>(ruleKey);
+            pipelineSteps.Add((ruleDescriptor.Order, EffectExecutor(ruleDescriptor, rule, serviceProvider)));
         }
 
         foreach (var actionKey in actionKeys)
         {
             var ruleDescriptor = serviceProvider.GetRequiredKeyedService<RuleDescriptor>(actionKey);
-            var ruleDelegate = serviceProvider.GetRequiredKeyedService<Rule<TEvent, IEvent>>(actionKey);
-            pipelineSteps.Add((ruleDescriptor.Order, async state =>
-            {
-                if (ruleDescriptor.Connections.Conditions.All(c =>
-                    {
-                        var conditionDelegate = serviceProvider.GetKeyedService<Rule<TEvent, bool>>(c);
-                        return conditionDelegate == null || conditionDelegate(state);
-                    }))
-                {
-                    var generatedEvent = ruleDelegate(state);
-                    if (generatedEvent != null)
-                    {
-                        await mediator.Publish(generatedEvent, cancellationToken);
-                    }
-                }
-                return state;
-            }));
+            var rule = serviceProvider.GetRequiredKeyedService<IRule<TEvent, IEvent>>(actionKey);
+            Task Publisher(IEvent e) => publisher.Publish(e, cancellationToken);
+            pipelineSteps.Add((ruleDescriptor.Order, ActionExecutor(ruleDescriptor, rule, serviceProvider, Publisher)));
         }
 
         foreach (var step in pipelineSteps.OrderBy(x => x.Order))
         {
-            currentState = await step.Execute(currentState);
+            e = await step.Execute(e);
         }
 
-        if (!e.Transitions.TryDequeue(out var nextTransition))
+        foreach (Transition transition in transitions)
         {
-            return;
+            var transitionRule = serviceProvider.GetRequiredKeyedService<IRule<TEvent, IEvent>>(transition.Key);
+
+            IEvent nextEvent = transitionRule.Apply(e);
+
+            var nextEventType = nextEvent.GetType();
+            var nextDescriptor = _components.Events.Find(nextEventType);
+
+            var nextMessage = new EventRaisedEvent
+            {
+                Data = JsonSerializer.SerializeToElement(nextEvent, nextEventType),
+                Key = nextDescriptor.Key,
+                Transitions = transition.Chain,
+            };
+
+            await publisher.Publish(nextMessage, cancellationToken);
         }
-
-        IEvent nextEvent = nextTransition(currentState);
-
-        var nextEventType = nextEvent.GetType();
-        var nextDescriptor = _components.Events.FirstOrDefault(d => d.Type == nextEventType)
-            ?? throw new InvalidOperationException($"Could not find a descriptor for event of type {nextEventType}");
-
-        var nextMessage = new EventRaisedEvent
-        {
-            Event = nextEvent,
-            Descriptor = nextDescriptor,
-            Transitions = e.Transitions
-        };
-
-        await mediator.Publish(nextMessage, cancellationToken);
     }
+
+    private static Func<TEvent, Task<TEvent>> EffectExecutor(
+        RuleDescriptor effectDescriptor,
+        IRule<TEvent> effect,
+        IServiceProvider serviceProvider) => state =>
+    {
+        bool CheckCondition(RuleKey c)
+        {
+            var conditionDelegate = serviceProvider.GetKeyedService<IRule<TEvent, bool>>(c);
+            return conditionDelegate == null || conditionDelegate.Apply(state);
+        }
+        if (effectDescriptor.Connections.Conditions.All(CheckCondition))
+        {
+            state = effect.Apply(state);
+        }
+        return Task.FromResult(state);
+    };
+
+    private static Func<TEvent, Task<TEvent>> ActionExecutor(
+        RuleDescriptor actionDescriptor,
+        IRule<TEvent, IEvent> action,
+        IServiceProvider serviceProvider,
+        Func<IEvent, Task> publisher) => async state =>
+    {
+        bool CheckCondition(RuleKey c)
+        {
+            var conditionDelegate = serviceProvider.GetKeyedService<IRule<TEvent, bool>>(c);
+            return conditionDelegate == null || conditionDelegate.Apply(state);
+        }
+        if (actionDescriptor.Connections.Conditions.All(CheckCondition))
+        {
+            var generatedEvent = action.Apply(state);
+            if (generatedEvent != null)
+            {
+                await publisher(generatedEvent);
+            }
+        }
+        return state;
+    };
 }

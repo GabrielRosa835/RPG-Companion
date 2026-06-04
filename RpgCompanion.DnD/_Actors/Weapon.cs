@@ -1,3 +1,8 @@
 namespace RpgCompanion.DnD;
 
-public record Weapon(Dice DamageDice, int DamageModifier);
+using Core;
+
+public record Weapon
+{
+    public Dice.D6 DamageDice { get; set; } = default!;
+}

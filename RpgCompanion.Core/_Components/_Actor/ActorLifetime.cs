@@ -2,6 +2,7 @@ namespace RpgCompanion.Core;
 
 public enum ActorLifetime
 {
-    Persistent,
-    Immediate,
+    Persistent, // Singleton
+    Temporary, // Scoped
+    Immediate, // Transient
 }

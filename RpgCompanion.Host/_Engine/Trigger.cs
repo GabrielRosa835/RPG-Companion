@@ -1,28 +1,26 @@
 namespace RpgCompanion.Host;
 
-using Core;
-using MediatR;
+using System.Text.Json;
+using MassTransit;
+using RpgCompanion.Core;
 
-public class Trigger(IMediator mediator, IComponentGraph components) : ITrigger
+internal class Trigger(IBus _bus, IComponentGraph _components) : ITrigger
 {
-    public void Raise<TEvent>(TEvent e, Configure<IPipeline<TEvent>>? pipeline = null) where TEvent : IEvent
+    public void Raise<TEvent>(TEvent e, System.Action<IPipeline<TEvent>>? pipeline = null) where TEvent : IEvent
     {
-        var nextEventType = typeof(TEvent);
-        var descriptor = components.Events.FirstOrDefault(d => d.Type == nextEventType)
-            ?? throw new InvalidOperationException($"Could not find a descriptor for event of type {nextEventType}");
-
-        var transitions = new Queue<Func<IEvent, IEvent>>();
-        var pipelineBuilder = new Pipeline<TEvent>(transitions);
-        pipeline?.Invoke(pipelineBuilder);
-
+        var descriptor = _components.Events.Find<TEvent>();
+        var transitions = new List<Transition>();
+        if (pipeline is not null)
+        {
+            var pipelineBuilder = new Pipeline<TEvent>(transitions, _components);
+            pipeline.Invoke(pipelineBuilder);
+        }
         var raising = new EventRaisedEvent
         {
-            Event = e,
-            Descriptor = descriptor,
-            Transitions = transitions,
+            Data = JsonSerializer.SerializeToElement(e, typeof(TEvent)),
+            Key = descriptor.Key,
+            Transitions = transitions
         };
-
-        // Sticking to your prototype's synchronous-over-async pattern for now
-        mediator.Publish(raising).GetAwaiter().GetResult();
+        _bus.Publish(raising).GetAwaiter().GetResult();
     }
 }

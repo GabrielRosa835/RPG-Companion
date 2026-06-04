@@ -13,7 +13,7 @@ public static class DiceRoll
     };
     public class Event
     {
-        public Dice Dice { get; init; }
+        public Dice.D6 Dice { get; init; }
         public int Result { get; set; }
     }
 }

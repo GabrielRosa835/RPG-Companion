@@ -1,7 +1,15 @@
-### Modelagem
+### FRAMEWORK
 
-- Regra e Efeitos (Rule/Effect) => Funções que alteram o elemento em questão,
-  podendo retornar um novo valor ou mutar o original, com regras retornando o
-  mesmo tipo de objeto enquanto efeitos retornam um tipo diferente.
-- Eventos => Quando algo de fato acontece.
+- Regras => Funções que transformam o elemento em questão, tanto para o mesmo 
+tipo da entrada quanto para tipos diferentes. São classificadas em:
+  - Regras: funções diversas não categorizadas. 
+  - Condições: Regras que consideram a aplicabilidade de uma outra regra, retornando
+  especificamente um boleano.
+  - Efeitos: Regras que retornam o mesmo objeto, efetivamente o mutando.
+  - Ações: Regras que geram novos eventos.
+- Eventos => Objetos que encapsulam dados e um contexto específico para o acontecimento
+de algum fato, de modo que múltiplos consumidores possam reagir a esse.
+- Atores => Objetos especiais registrados no DI (nuvem), podendo serem Persistentes
+(Singletons) ou Imediatos (Transients).
+
 - Dados => Persistência

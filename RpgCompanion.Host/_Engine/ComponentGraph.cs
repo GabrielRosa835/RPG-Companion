@@ -9,7 +9,7 @@ public class ComponentGraph(
     IEnumerable<RuleDescriptor> _rules)
     : IComponentGraph
 {
-    // TODO: Improve performance of this
+    // TODO: Improve performance of this (HashMap?)
     public IQueryable<PluginDescriptor> Plugins => _plugins.AsQueryable();
     public IQueryable<EventDescriptor> Events => _events.AsQueryable();
     public IQueryable<ActorDescriptor> Actors => _actors.AsQueryable();

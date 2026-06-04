@@ -1,24 +1,25 @@
-namespace RpgCompanion.Prototypes.MediatR;
+namespace RpgCompanion.Host;
 
 using Core;
-using global::MediatR;
+using MediatR;
 
 public class Trigger(IMediator mediator, IComponentGraph components) : ITrigger
 {
-    public void Raise<TEvent>(TEvent e, Action<IPipeline>? pipeline = null) where TEvent : IEvent
+    public void Raise<TEvent>(TEvent e, Configure<IPipeline<TEvent>>? pipeline = null) where TEvent : IEvent
     {
         var nextEventType = typeof(TEvent);
         var descriptor = components.Events.FirstOrDefault(d => d.Type == nextEventType)
             ?? throw new InvalidOperationException($"Could not find a descriptor for event of type {nextEventType}");
 
-        var pipelineBuilder = new Pipeline();
+        var transitions = new Queue<Func<IEvent, IEvent>>();
+        var pipelineBuilder = new Pipeline<TEvent>(transitions);
         pipeline?.Invoke(pipelineBuilder);
 
-        var raising = new EventRaisedEvent<TEvent>
+        var raising = new EventRaisedEvent
         {
             Event = e,
-            DescriptorKey = descriptor.Key,
-            Transitions = pipelineBuilder.Transitions
+            Descriptor = descriptor,
+            Transitions = transitions,
         };
 
         // Sticking to your prototype's synchronous-over-async pattern for now

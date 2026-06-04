@@ -1,12 +1,24 @@
 namespace RpgCompanion.Host;
 
-using Core;
+using RpgCompanion.Core;
 
-internal class Pipeline<TEvent>(Queue<Func<IEvent, IEvent>> _queue) : IPipeline<TEvent> where TEvent : IEvent
+internal class Pipeline<TEvent>(List<Transition> _transitions, IComponentGraph _components) : IPipeline<TEvent> where TEvent : IEvent
 {
-    public IPipeline<TNext> Then<TNext>(Func<TEvent, TNext> continuation) where TNext : IEvent
+    public IPipeline<TEvent> Then<TNext>(RuleKey<TEvent, TNext> transitionRuleKey, System.Action<IPipeline<TNext>>? pipeline = null)
+        where TNext : IEvent
     {
-        _queue.Enqueue(e => continuation((TEvent) e));
-        return new Pipeline<TNext>(_queue);
+        var transitions = new List<Transition>();
+        if (pipeline is not null)
+        {
+            var pipelineBuilder = new Pipeline<TNext>(transitions, _components);
+            pipeline.Invoke(pipelineBuilder);
+        }
+        var transition = new Transition
+        {
+            Key = transitionRuleKey,
+            Chain = transitions,
+        };
+        _transitions.Add(transition);
+        return this;
     }
 }

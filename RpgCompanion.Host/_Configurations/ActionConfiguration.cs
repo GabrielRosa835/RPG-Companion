@@ -11,24 +11,23 @@ internal class ActionConfiguration<T, TEvent>(
     : IActionConfiguration<T, TEvent>
     where TEvent : class, IEvent
 {
-    private readonly List<Action> _lazyConfigurations = [];
+    private readonly List<System.Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _conditions = [];
-    private RuleKey? _key;
+    private RuleKey _key = Guid.CreateVersion7().ToString();
     private EventKey? _for;
     private string? _displayName;
     private string? _description;
 
     internal RuleKey Build()
     {
-        KeyException.ThrowIfNull(_key);
         KeyException.ThrowIfNull(_for);
-        foreach (Action lazyConfiguration in _lazyConfigurations)
+        foreach (System.Action lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
         var descriptor = new RuleDescriptor
         {
-            Key = _key.Value,
+            Key = _key,
             Order = 0,
             DisplayName = _displayName,
             Description = _description,
@@ -44,7 +43,7 @@ internal class ActionConfiguration<T, TEvent>(
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
-        return _key.Value;
+        return _key;
     }
 
     public IActionConfiguration<T, TEvent> WithKey(RuleKey<T, TEvent> key)
@@ -78,7 +77,7 @@ internal class ActionConfiguration<T, TEvent>(
             var configuration = new ConditionConfiguration<T>(
                 _services: _services,
                 _plugin: _plugin,
-                _for: _key!.Value);
+                _for: _key);
             configure(configuration);
             var key = configuration.Build();
             _conditions.Add(key);
@@ -87,33 +86,26 @@ internal class ActionConfiguration<T, TEvent>(
         return this;
     }
 
-    public IActionConfiguration<T, TEvent> Export(Rule<T, TEvent> instance)
+    public IActionConfiguration<T, TEvent> Export(IRule<T, TEvent> instance)
     {
         _lazyConfigurations.Add(() =>
         {
             _services.AddKeyedSingleton(_key, instance);
-            _services.AddKeyedSingleton<Rule<T, IEvent>>(_key, instance);
+            _services.AddKeyedSingleton<IRule<T, IEvent>>(_key, instance);
             _services.AddSingleton(instance);
-            _services.AddSingleton<Rule<T, IEvent>>(instance);
+            _services.AddSingleton<IRule<T, IEvent>>(instance);
         });
         return this;
     }
 
-    public IActionConfiguration<T, TEvent> Export<TDefinition>() where TDefinition : class, IRuleDefinition<T, TEvent>
+    public IActionConfiguration<T, TEvent> Export<TRule>() where TRule : class, IRule<T, TEvent>
     {
         _lazyConfigurations.Add(() =>
         {
-            _services.AddKeyedTransient<TDefinition>(_key);
-            _services.AddKeyedTransient<Rule<T, TEvent>>(_key, (sp, key) =>
-                sp.GetRequiredKeyedService<TDefinition>(_key).Compose());
-            _services.AddKeyedTransient<Rule<T, IEvent>>(_key, (sp, key) =>
-                sp.GetRequiredKeyedService<TDefinition>(_key).Compose());
-
-            _services.AddTransient<TDefinition>();
-            _services.AddTransient<Rule<T, TEvent>>(sp =>
-                sp.GetRequiredService<TDefinition>().Compose());
-            _services.AddTransient<Rule<T, IEvent>>(sp =>
-                sp.GetRequiredService<TDefinition>().Compose());
+            _services.AddKeyedTransient<TRule>(_key);
+            _services.AddKeyedTransient<IRule<T, TEvent>>(_key, (sp, key) => sp.GetRequiredKeyedService<TRule>(key));
+            _services.AddTransient<TRule>();
+            _services.AddTransient<IRule<T, TEvent>>(sp => sp.GetRequiredService<TRule>());
         });
         return this;
     }

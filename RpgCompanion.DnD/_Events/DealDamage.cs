@@ -4,36 +4,37 @@ using Core;
 
 public static class DealDamage
 {
-    public record Event(Defender Defender, int Damage) : IEvent
+    public record Event(Enemy Enemy, int Damage) : IEvent
     {
-        public static EventKey<Event> Key = typeof(Event).FullName!;
+        public static EventKey<Event> Key { get; } = typeof(Event).FullName!;
     }
 
-    public static class ShouldApply
+    public class ShouldApply : ICondition<Event>
     {
-        public static RuleKey<Event, bool> Key = typeof(ShouldApply).FullName!;
-        public static Rule<Event, bool> Rule = (e) => e.Damage > 0;
+        public static RuleKey<Event, bool> Key { get; } = typeof(ShouldApply).FullName!;
+        public bool Apply(Event e) => e.Damage > 0;
     }
 
-    public static class Apply
+    public class Rule : IRule<Event>
     {
-        public static RuleKey<Event> Key = typeof(Apply).FullName!;
-        public static Rule<Event> Rule => (e) =>
+        public static RuleKey<Event> Key { get; } = typeof(Rule).FullName!;
+
+        public Event Apply(Event target)
         {
             Console.WriteLine($"""
-                Realizando efeito de dano
-                Defensor: {e.Defender.Name} ({e.Defender.Health}HP)
-                Dano: {e.Damage}
-                """);
+                               Realizando efeito de dano
+                               Defensor: {target.Enemy.Name} ({target.Enemy.Health}HP)
+                               Dano: {target.Damage}
+                               """);
 
-            e.Defender.Health -= e.Damage;
-            if (e.Defender.Health <= 0)
+            target.Enemy.Health -= target.Damage;
+            if (target.Enemy.Health <= 0)
             {
-                e.Defender.Health = 0;
+                target.Enemy.Health = 0;
             }
 
-            Console.WriteLine($"Vida após dano: {e.Defender.Health}HP");
-            return e;
-        };
+            Console.WriteLine($"Vida após dano: {target.Enemy.Health}HP");
+            return target;
+        }
     }
 }

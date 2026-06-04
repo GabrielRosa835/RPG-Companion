@@ -59,6 +59,8 @@ internal class PluginManager
             var configuration = new PluginConfiguration(services, metadata);
             manifest.Configure(configuration);
             metadata.Descriptor = configuration.Build();
+            metadata.Assembly = assembly;
+            metadata.Activated = true;
             _plugins.Add(metadata);
         },
         cancellationToken);

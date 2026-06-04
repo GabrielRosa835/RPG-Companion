@@ -12,28 +12,56 @@ public class Manifest : IManifest
         .AddEvent<DiceRoll.Event>(e => e
             .WithKey(DiceRoll.Event.Key)
             .AddRule(rule => rule
-                .WithKey(DiceRoll.Apply.Key)
-                .Export(DiceRoll.Apply.Rule)))
+                .WithKey(DiceRoll.Rule.Key)
+                .Export<DiceRoll.Rule>()))
         .AddEvent<Attack.Event>(e => e
             .WithKey(Attack.Event.Key)
             .AddRule(rule => rule
-                .WithKey(Attack.Definition.Key)
-                .Export<Attack.Definition>()))
+                .WithKey(Attack.Rule.Key)
+                .Export<Attack.Rule>()))
         .AddEvent<DealDamage.Event>(e => e
             .WithKey(DealDamage.Event.Key)
             .AddRule(rule => rule
-                .WithKey(DealDamage.Apply.Key)
-                .Export(DealDamage.Apply.Rule)
+                .WithKey(DealDamage.Rule.Key)
+                .Export<DealDamage.Rule>()
                 .WithCondition(condition => condition
                     .WithKey(DealDamage.ShouldApply.Key)
-                    .Export(DealDamage.ShouldApply.Rule))));
+                    .Export<DealDamage.ShouldApply>())))
+        .AddRule<DiceRoll.Event, IEvent>(rule => rule
+            .WithKey(Attack.DiceRollTransition.Key)
+            .Export<Attack.DiceRollTransition>())
+        .AddActor<GlobalData>(actor => actor
+            .WithName("GlobalData")
+            .WithKey(GlobalData.Key)
+            .WithLifetime(ActorLifetime.Persistent)
+            .WithDescription("Centralized storage of global generic data")
+            .Export())
+        .AddActor<ContextData>(actor => actor
+            .WithName("ContextData")
+            .WithKey(ContextData.Key)
+            .WithLifetime(ActorLifetime.Temporary)
+            .WithDescription("Centralized storage of contextual generic data")
+            .Export());
 
     private static void Initialize(IRegistry registry, PluginKey pluginKey)
     {
         var trigger = registry.GetRequired<ITrigger>();
-        var weapon = new Weapon(new Dice.D6(), 5);
-        var attacker = new Attacker("Thomas", weapon, 3);
-        var defender = new Defender("Lucas", 50, 0);
+        var attacker = new Player
+        {
+            Name = "Thomas",
+            AttackModifier = 5,
+            DamageModifier = 3,
+            Weapon = new Weapon
+            {
+                DamageDice = new Dice.D6(),
+            },
+        };
+        var defender = new Enemy
+        {
+            Name = "Lucas",
+            AC = 15,
+            Health = 50,
+        };
         trigger.Raise(new Attack.Event(attacker, defender));
     }
 }

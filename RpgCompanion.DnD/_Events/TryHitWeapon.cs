@@ -4,30 +4,31 @@ using Core;
 
 public static class TryHitWeapon
 {
-    public record Event(int Modifier, int TargetValue) : IEvent
+    public record Event(int AttackResult, Enemy Defender) : IEvent
     {
-        public static EventKey<Event> Key = typeof(Event).FullName!;
+        public static EventKey<Event> Key { get; } = typeof(Event).FullName!;
         public bool Hit { get; set; }
     }
-    public static class Apply
+
+    public class Rule : IRule<Event>
     {
-        public static RuleKey<Event> Key = typeof(Apply).FullName!;
-        public static Rule<Event> Rule => (e) =>
+        public static RuleKey<Event> Key { get; } = typeof(Rule).FullName!;
+
+        public Event Apply(Event target)
         {
             Console.WriteLine($"""
-               Realizando efeito de tentativa de ataque
-               Target: {e.TargetValue}
-               Modifier: {e.Modifier}
-               """);
+                               Realizando efeito de tentativa de ataque
+                               Target: {target.Defender.AC}
+                               Modifier: {target.AttackResult}
+                               """);
 
-            int result = new Dice.D20().Roll() + e.Modifier;
-            var hit = result >= e.TargetValue;
-            e.Hit = hit;
+            var hit = target.AttackResult >= target.Defender.AC;
+            target.Hit = hit;
 
-            Console.WriteLine($"Resultado: {result}");
+            Console.WriteLine($"Resultado: {target.AttackResult}");
             Console.WriteLine($"Sucesso: {hit}");
 
-            return e;
-        };
+            return target;
+        }
     }
 }

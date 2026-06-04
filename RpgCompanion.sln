@@ -6,11 +6,8 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F923189F-788B-45E0-A4DC-2932E0658298}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		Plugins\Directory.Build.targets = Plugins\Directory.Build.targets
 		notes.md = notes.md
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.MassTransit", "RpgCompanion.Prototypes.MassTransit\RpgCompanion.Prototypes.MassTransit.csproj", "{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Host", "RpgCompanion.Host\RpgCompanion.Host.csproj", "{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}"
 EndProject
@@ -20,11 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Core", "RpgCom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "RpgCompanion.DnD\RpgCompanion.DnD.csproj", "{CEDCEA19-E429-4C90-B99A-210A62765088}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Manual", "RpgCompanion.Prototypes.Manual\RpgCompanion.Prototypes.Manual.csproj", "{975D7FF5-B132-4937-AF97-4DB71B5DE900}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.Quartz", "RpgCompanion.Prototypes.Quartz\RpgCompanion.Prototypes.Quartz.csproj", "{C34EE8D9-472C-4675-A4D9-873923A93DC0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Prototypes.MediatR", "RpgCompanion.Prototypes.MediatR\RpgCompanion.Prototypes.MediatR.csproj", "{D883DF60-D4BB-4FEA-85C0-E9823690081E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils", "Utils\Utils.csproj", "{348C49A8-A386-460A-9C81-DBE7E9AA34DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,10 +25,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3AF0FC9A-CCED-4D5D-A3BA-BDC12708ADF0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2F3806B-8149-42C1-94A5-1C2D487AB9FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -52,18 +41,10 @@ Global
 		{CEDCEA19-E429-4C90-B99A-210A62765088}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEDCEA19-E429-4C90-B99A-210A62765088}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEDCEA19-E429-4C90-B99A-210A62765088}.Release|Any CPU.Build.0 = Release|Any CPU
-		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{975D7FF5-B132-4937-AF97-4DB71B5DE900}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C34EE8D9-472C-4675-A4D9-873923A93DC0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D883DF60-D4BB-4FEA-85C0-E9823690081E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{348C49A8-A386-460A-9C81-DBE7E9AA34DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{348C49A8-A386-460A-9C81-DBE7E9AA34DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{348C49A8-A386-460A-9C81-DBE7E9AA34DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{348C49A8-A386-460A-9C81-DBE7E9AA34DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

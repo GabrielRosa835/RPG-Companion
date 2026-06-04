@@ -1,14 +1,12 @@
-namespace RpgCompanion.Prototypes.MassTransit;
+namespace RpgCompanion.Host;
 
 using Core;
 
-public class Pipeline : IPipeline
+internal class Pipeline<TEvent>(Queue<Func<IEvent, IEvent>> _queue) : IPipeline<TEvent> where TEvent : IEvent
 {
-    internal Queue<RuleKey> Transitions { get; } = [];
-
-    public IPipeline Then<TEvent, TNext>(RuleKey<TEvent, TNext> transitionRuleKey)
+    public IPipeline<TNext> Then<TNext>(Func<TEvent, TNext> continuation) where TNext : IEvent
     {
-        Transitions.Enqueue(transitionRuleKey);
-        return this;
+        _queue.Enqueue(e => continuation((TEvent) e));
+        return new Pipeline<TNext>(_queue);
     }
 }
