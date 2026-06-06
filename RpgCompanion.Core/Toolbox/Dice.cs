@@ -1,4 +1,4 @@
-namespace RpgCompanion.Core;
+namespace RpgCompanion.Core.Toolbox;
 
 using System.Text.Json.Serialization;
 

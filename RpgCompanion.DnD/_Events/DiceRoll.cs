@@ -1,7 +1,7 @@
 namespace RpgCompanion.DnD;
 
 using Core;
-using Utils.Storage;
+using Core.Toolbox;
 
 public static class DiceRoll
 {

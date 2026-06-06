@@ -21,7 +21,7 @@ internal class ActionConfiguration<T, TEvent>(
     internal RuleKey Build()
     {
         KeyException.ThrowIfNull(_for);
-        foreach (System.Action lazyConfiguration in _lazyConfigurations)
+        foreach (var lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
@@ -70,7 +70,7 @@ internal class ActionConfiguration<T, TEvent>(
         return this;
     }
 
-    public IActionConfiguration<T, TEvent> WithCondition(Configure<IConditionConfiguration<T>> configure)
+    public IActionConfiguration<T, TEvent> WithCondition(Action<IConditionConfiguration<T>> configure)
     {
         _lazyConfigurations.Add(() =>
         {

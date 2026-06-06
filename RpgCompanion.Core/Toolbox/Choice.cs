@@ -1,4 +1,5 @@
-namespace RpgCompanion.Core;
+namespace RpgCompanion.Core.Toolbox;
+
 
 public class Choice<T>
 {

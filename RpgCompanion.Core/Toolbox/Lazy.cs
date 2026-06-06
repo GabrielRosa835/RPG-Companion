@@ -1,4 +1,4 @@
-namespace RpgCompanion.Core;
+namespace RpgCompanion.Core.Toolbox;
 
 public record Lazy<T>
 {
@@ -10,11 +10,9 @@ public record Lazy<T>
 
     private T GetValue()
     {
-        if (!_initialized)
-        {
-            _initialized = true;
-            _value = _factory();
-        }
+        if (_initialized) return _value;
+        _initialized = true;
+        _value = _factory();
         return _value;
     }
 
@@ -33,15 +31,12 @@ public record Lazy<T>
     }
 
     public Lazy<U> Map<U>(Func<T, U> mapper) => new(() => mapper(Value));
-    public Lazy<U> Map<U>(Func<T, Lazy<U>> mapper) => new(() => mapper(Value).Value);
-    public Lazy<T> Compute() => new(Value); // Forces initialization
+    public Lazy<U> FlatMap<U>(Func<T, Lazy<U>> mapper) => new(() => mapper(Value).Value);
+    public Lazy<T> ForceEvaluation() => new(Value);
 
     public static implicit operator Lazy<T>(T value) => new(value);
     public static implicit operator Lazy<T>(Func<T> factory) => new(factory);
     public static implicit operator T(Lazy<T> lazy) => lazy.Value;
-    public static implicit operator Rule<T>(Lazy<T> lazy) => new(_ => lazy.Value);
-
-    public static Lazy<T> operator |(Lazy<T> lazy, IRule<T> rule) => new(() => rule.Apply(lazy.Value));
 }
 
 public static class Lazy

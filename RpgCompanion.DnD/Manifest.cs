@@ -1,6 +1,7 @@
 ﻿namespace RpgCompanion.DnD;
 
 using Core;
+using Core.Toolbox;
 
 public class Manifest : IManifest
 {

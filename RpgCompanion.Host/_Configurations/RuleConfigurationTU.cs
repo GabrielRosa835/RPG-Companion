@@ -10,7 +10,7 @@ internal class RuleConfiguration<T, U>(
     ActorKey? _actor)
     : IRuleConfiguration<T, U>
 {
-    private readonly List<System.Action> _lazyConfigurations = [];
+    private readonly List<Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _conditions = [];
     private RuleKey _key = Guid.NewGuid().ToString();
     private string? _displayName;
@@ -68,7 +68,7 @@ internal class RuleConfiguration<T, U>(
         return this;
     }
 
-    public IRuleConfiguration<T, U> WithCondition(Configure<IConditionConfiguration<T>> configure)
+    public IRuleConfiguration<T, U> WithCondition(Action<IConditionConfiguration<T>> configure)
     {
         _lazyConfigurations.Add(() =>
         {

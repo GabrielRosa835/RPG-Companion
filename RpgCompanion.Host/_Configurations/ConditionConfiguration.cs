@@ -1,7 +1,6 @@
 namespace RpgCompanion.Host;
 
 using Core;
-using Action = System.Action;
 
 public class ConditionConfiguration<T>(
     IServiceCollection _services,
@@ -16,7 +15,7 @@ public class ConditionConfiguration<T>(
 
     public RuleKey Build()
     {
-        foreach (Action lazyConfiguration in _lazyConfigurations)
+        foreach (var lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }

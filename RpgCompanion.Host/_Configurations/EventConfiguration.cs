@@ -1,7 +1,6 @@
 namespace RpgCompanion.Host;
 
 using Core;
-using Microsoft.AspNetCore.Mvc;
 
 internal class EventConfiguration<TEvent>(
     IServiceCollection _services,
@@ -10,7 +9,7 @@ internal class EventConfiguration<TEvent>(
     : IEventConfiguration<TEvent>
     where TEvent : class, IEvent
 {
-    private readonly List<System.Action> _lazyConfigurations = [];
+    private readonly List<Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _actions = [];
     private readonly HashSet<RuleKey> _rules = [];
     private EventKey _key = Guid.NewGuid().ToString();
@@ -19,7 +18,7 @@ internal class EventConfiguration<TEvent>(
 
     internal EventKey Build()
     {
-        foreach (System.Action lazyConfiguration in _lazyConfigurations)
+        foreach (var lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
@@ -59,7 +58,7 @@ internal class EventConfiguration<TEvent>(
         return this;
     }
 
-    public IEventConfiguration<TEvent> AddRule(Configure<IRuleConfiguration<TEvent>> configure)
+    public IEventConfiguration<TEvent> AddRule(Action<IRuleConfiguration<TEvent>> configure)
     {
         _lazyConfigurations.Add(() =>
         {
@@ -77,7 +76,7 @@ internal class EventConfiguration<TEvent>(
         return this;
     }
 
-    public IEventConfiguration<TEvent> AddRule<U>(Configure<IRuleConfiguration<TEvent, U>> configure)
+    public IEventConfiguration<TEvent> AddRule<U>(Action<IRuleConfiguration<TEvent, U>> configure)
     {
         _lazyConfigurations.Add(() =>
         {
@@ -96,7 +95,7 @@ internal class EventConfiguration<TEvent>(
     }
 
     public IEventConfiguration<TEvent> AddAction<TOtherEvent>(
-        Configure<IActionConfiguration<TEvent, TOtherEvent>> configure) where TOtherEvent : class, IEvent
+        Action<IActionConfiguration<TEvent, TOtherEvent>> configure) where TOtherEvent : class, IEvent
     {
         _lazyConfigurations.Add(() =>
         {

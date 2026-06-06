@@ -18,7 +18,7 @@ public class ActorConfiguration<TActor>(
 
     public ActorKey Build()
     {
-        foreach (System.Action lazyConfiguration in _lazyConfigurations)
+        foreach (var lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
@@ -49,7 +49,7 @@ public class ActorConfiguration<TActor>(
 
     public IActorConfiguration<TActor> WithDescription(string description) => Do(() => _description = description);
 
-    public IActorConfiguration<TActor> AddAction<TEvent>(Configure<IActionConfiguration<TActor, TEvent>> configure)
+    public IActorConfiguration<TActor> AddAction<TEvent>(Action<IActionConfiguration<TActor, TEvent>> configure)
         where TEvent : class, IEvent => DoLazy(() =>
     {
         var configuration = new ActionConfiguration<TActor, TEvent>(
@@ -84,7 +84,7 @@ public class ActorConfiguration<TActor>(
         }
     });
 
-    public IActorConfiguration<TActor> AddRule<U>(Configure<IRuleConfiguration<TActor, U>> configure) => DoLazy(() =>
+    public IActorConfiguration<TActor> AddRule<U>(Action<IRuleConfiguration<TActor, U>> configure) => DoLazy(() =>
     {
         var configuration = new RuleConfiguration<TActor, U>(
             _services: _services,
@@ -98,7 +98,7 @@ public class ActorConfiguration<TActor>(
         _rules.Add(key);
     });
 
-    public IActorConfiguration<TActor> AddRule(Configure<IRuleConfiguration<TActor>> configure) => DoLazy(() =>
+    public IActorConfiguration<TActor> AddRule(Action<IRuleConfiguration<TActor>> configure) => DoLazy(() =>
     {
         var configuration = new RuleConfiguration<TActor>(
             _services: _services,

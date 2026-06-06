@@ -7,12 +7,12 @@ public interface IPluginConfiguration
     public IPluginConfiguration WithVersion(string version);
     public IPluginConfiguration WithInitialization(Initialization initialization);
 
-    public IPluginConfiguration AddActor<TActor>(Configure<IActorConfiguration<TActor>> configure)
+    public IPluginConfiguration AddActor<TActor>(Action<IActorConfiguration<TActor>> configure)
         where TActor : class, IActor;
 
-    public IPluginConfiguration AddEvent<TEvent>(Configure<IEventConfiguration<TEvent>> configure)
+    public IPluginConfiguration AddEvent<TEvent>(Action<IEventConfiguration<TEvent>> configure)
         where TEvent : class, IEvent;
 
-    public IPluginConfiguration AddRule<T>(Configure<IRuleConfiguration<T>> configure);
-    public IPluginConfiguration AddRule<T, U>(Configure<IRuleConfiguration<T, U>> configure);
+    public IPluginConfiguration AddRule<T>(Action<IRuleConfiguration<T>> configure);
+    public IPluginConfiguration AddRule<T, U>(Action<IRuleConfiguration<T, U>> configure);
 }

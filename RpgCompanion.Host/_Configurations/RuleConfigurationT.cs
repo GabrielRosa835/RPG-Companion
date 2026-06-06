@@ -19,7 +19,7 @@ internal class RuleConfiguration<T>(
 
     internal RuleKey Build()
     {
-        foreach (System.Action lazyConfiguration in _lazyConfigurations)
+        foreach (var lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
@@ -67,7 +67,7 @@ internal class RuleConfiguration<T>(
         return this;
     }
 
-    public IRuleConfiguration<T> WithCondition(Configure<IConditionConfiguration<T>> configure)
+    public IRuleConfiguration<T> WithCondition(Action<IConditionConfiguration<T>> configure)
     {
         _lazyConfigurations.Add(() =>
         {

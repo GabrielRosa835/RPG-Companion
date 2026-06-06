@@ -13,9 +13,9 @@ public class Registry(IServiceProvider _provider) : IRegistry
     public TEvent Get<TEvent>(EventKey<TEvent> key) where TEvent : class, IEvent =>
         _provider.GetRequiredKeyedService<TEvent>(key);
 
-    public Rule<T> Get<T>(RuleKey<T> key) => _provider.GetRequiredKeyedService<Rule<T>>(key);
+    public IRule<T> Get<T>(RuleKey<T> key) => _provider.GetRequiredKeyedService<IRule<T>>(key);
 
-    public Rule<T, U> Get<T, U>(RuleKey<T, U> key) => _provider.GetRequiredKeyedService<Rule<T, U>>(key);
+    public IRule<T, U> Get<T, U>(RuleKey<T, U> key) => _provider.GetRequiredKeyedService<IRule<T, U>>(key);
 }
 
 public static class ServiceProviderExtensions

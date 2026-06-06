@@ -1,14 +1,13 @@
 namespace RpgCompanion.Host.Configuration;
 
 using Core;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 internal class PluginConfiguration(
     IServiceCollection _services,
     PluginMetadata _metadata)
     : IPluginConfiguration
 {
-    private readonly List<System.Action> _lazyConfigurations = [];
+    private readonly List<Action> _lazyConfigurations = [];
     private PluginKey _key = Guid.NewGuid().ToString();
 
     private readonly HashSet<RuleKey> _rules = [];
@@ -20,7 +19,7 @@ internal class PluginConfiguration(
 
     public PluginDescriptor Build()
     {
-        foreach (System.Action lazyConfiguration in _lazyConfigurations)
+        foreach (var lazyConfiguration in _lazyConfigurations)
         {
             lazyConfiguration.Invoke();
         }
@@ -62,7 +61,7 @@ internal class PluginConfiguration(
         return this;
     }
 
-    public IPluginConfiguration AddActor<TActor>(Configure<IActorConfiguration<TActor>> configure)
+    public IPluginConfiguration AddActor<TActor>(Action<IActorConfiguration<TActor>> configure)
         where TActor : class, IActor
     {
         _lazyConfigurations.Add(() =>
@@ -78,7 +77,7 @@ internal class PluginConfiguration(
         return this;
     }
 
-    public IPluginConfiguration AddEvent<TEvent>(Configure<IEventConfiguration<TEvent>> configure)
+    public IPluginConfiguration AddEvent<TEvent>(Action<IEventConfiguration<TEvent>> configure)
         where TEvent : class, IEvent
     {
         _lazyConfigurations.Add(() =>
@@ -94,7 +93,7 @@ internal class PluginConfiguration(
         return this;
     }
 
-    public IPluginConfiguration AddRule<T>(Configure<IRuleConfiguration<T>> configure)
+    public IPluginConfiguration AddRule<T>(Action<IRuleConfiguration<T>> configure)
     {
         _lazyConfigurations.Add(() =>
         {
@@ -111,7 +110,7 @@ internal class PluginConfiguration(
         return this;
     }
 
-    public IPluginConfiguration AddRule<T, U>(Configure<IRuleConfiguration<T, U>> configure)
+    public IPluginConfiguration AddRule<T, U>(Action<IRuleConfiguration<T, U>> configure)
     {
         _lazyConfigurations.Add(() =>
         {
