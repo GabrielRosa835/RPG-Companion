@@ -1,7 +1,23 @@
 ﻿namespace RpgCompanion.Core.Toolbox;
 
+using System.Collections;
+
 public static class EnumerableExtensions
 {
+    extension (IEnumerable enumerable)
+    {
+        public void ForEach(Action<object> action)
+        {
+            if (enumerable is List<object> list)
+            {
+                list.ForEach(action);
+            }
+            foreach (var value in enumerable)
+            {
+                action(value);
+            }
+        }
+    }
     extension<T>(IEnumerable<T> enumerable)
     {
         public IEnumerable<U> ConvertAll<U>(Func<T, U> mapper)

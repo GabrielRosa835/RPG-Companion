@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Core", "RpgCom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.DnD", "RpgCompanion.DnD\RpgCompanion.DnD.csproj", "{CEDCEA19-E429-4C90-B99A-210A62765088}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpgCompanion.Tests", "RpgCompanion.Tests\RpgCompanion.Tests.csproj", "{27F9F545-E927-4D4D-B1E1-73D8F75FF692}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{CEDCEA19-E429-4C90-B99A-210A62765088}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEDCEA19-E429-4C90-B99A-210A62765088}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEDCEA19-E429-4C90-B99A-210A62765088}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27F9F545-E927-4D4D-B1E1-73D8F75FF692}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27F9F545-E927-4D4D-B1E1-73D8F75FF692}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27F9F545-E927-4D4D-B1E1-73D8F75FF692}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27F9F545-E927-4D4D-B1E1-73D8F75FF692}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

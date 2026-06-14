@@ -2,10 +2,11 @@ namespace RpgCompanion.DnD;
 
 using System.Formats.Asn1;
 using Core;
+using Core.Toolbox;
 
 public static class Attack
 {
-    public static Key<Enemy> DefenderKey { get; } = $"{typeof(Attack).FullName!}-Defender";
+    public static StorageKey<Enemy> DefenderKey { get; } = $"{typeof(Attack).FullName!}-Defender";
 
     public record Event(Player Attacker, Enemy Defender) : IEvent
     {

@@ -5,7 +5,7 @@ using Core.Toolbox;
 
 public static class DiceRoll
 {
-    public static Key<int> Result {get;} = typeof(Event).FullName! + "-Result";
+    public static StorageKey<int> Result {get;} = typeof(Event).FullName! + "-Result";
 
     public record Event(Dice.D6 Dice, int Modifier) : IEvent
     {
