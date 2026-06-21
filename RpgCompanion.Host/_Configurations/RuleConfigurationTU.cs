@@ -29,80 +29,50 @@ internal class RuleConfiguration<T, U>(
             DisplayName = _displayName,
             Description = _description,
             Order = _order ?? 0,
-            Connections = new()
-            {
-                Plugin = _plugin,
-                Event = _event,
-                Actor = _actor,
-                Conditions =  _conditions,
-                ForEvent = null,
-                ForRule = null,
-            }
+            Plugin = _plugin,
+            Event = _event,
+            Actor = _actor,
+            Conditions = _conditions,
+            ForEvent = null,
+            ForRule = null,
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
         return _key;
     }
 
-    public IRuleConfiguration<T, U> WithKey(RuleKey<T, U> key)
+    public IRuleConfiguration<T, U> WithKey(RuleKey<T, U> key) => Do(() => _key = key);
+    public IRuleConfiguration<T, U> WithName(string name) => Do(() => _displayName = name);
+    public IRuleConfiguration<T, U> WithDescription(string description) => Do(() => _description = description);
+    public IRuleConfiguration<T, U> WithOrder(double order) => Do(() => _order = order);
+
+    public IRuleConfiguration<T, U> WithCondition(Action<IConditionConfiguration<T>> configure) => DoLazy(() =>
     {
-        _key = key;
+        var configuration = new ConditionConfiguration<T>(
+            _services: _services,
+            _plugin: _plugin,
+            _for: _key);
+        configure(configuration);
+        var key = configuration.Build();
+        _conditions.Add(key);
+        _pluginRules.Add(key);
+    });
+
+    public IRuleConfiguration<T, U> Export(Rule<T, U> rule) => DoLazy(() =>
+    {
+        _services.AddKeyedSingleton(_key, rule);
+        _services.AddSingleton(rule);
+    });
+
+    private IRuleConfiguration<T, U> Do(Action action)
+    {
+        action();
         return this;
     }
 
-    public IRuleConfiguration<T, U> WithName(string name)
+    private IRuleConfiguration<T, U> DoLazy(Action action)
     {
-        _displayName = name;
-        return this;
-    }
-
-    public IRuleConfiguration<T, U> WithDescription(string description)
-    {
-        _description = description;
-        return this;
-    }
-
-    public IRuleConfiguration<T, U> WithOrder(double order)
-    {
-        _order = order;
-        return this;
-    }
-
-    public IRuleConfiguration<T, U> WithCondition(Action<IConditionConfiguration<T>> configure)
-    {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new ConditionConfiguration<T>(
-                _services: _services,
-                _plugin: _plugin,
-                _for: _key);
-            configure(configuration);
-            var key = configuration.Build();
-            _conditions.Add(key);
-            _pluginRules.Add(key);
-        });
-        return this;
-    }
-
-    public IRuleConfiguration<T, U> Export(IRule<T, U> instance)
-    {
-        _lazyConfigurations.Add(() =>
-        {
-            _services.AddKeyedSingleton(_key, instance);
-            _services.AddSingleton(instance);
-        });
-        return this;
-    }
-
-    public IRuleConfiguration<T, U> Export<TRule>() where TRule : class, IRule<T, U>
-    {
-        _lazyConfigurations.Add(() =>
-        {
-            _services.AddKeyedTransient<IRule<T, U>>(_key, (sp, key) => sp.GetRequiredKeyedService<TRule>(key));
-            _services.AddTransient<IRule<T, U>>(sp => sp.GetRequiredService<TRule>());
-            _services.AddKeyedTransient<TRule>(_key);
-            _services.AddTransient<TRule>();
-        });
+        _lazyConfigurations.Add(action);
         return this;
     }
 }

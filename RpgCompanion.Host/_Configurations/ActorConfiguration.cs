@@ -8,7 +8,7 @@ public class ActorConfiguration<TActor>(
     ISet<RuleKey> _pluginRules)
     : IActorConfiguration<TActor> where TActor : class, IActor
 {
-    private readonly List<System.Action> _lazyConfigurations = [];
+    private readonly List<Action> _lazyConfigurations = [];
     private readonly HashSet<RuleKey> _actions = [];
     private readonly HashSet<RuleKey> _rules = [];
     private ActorLifetime _lifetime = ActorLifetime.Immediate;
@@ -29,12 +29,9 @@ public class ActorConfiguration<TActor>(
             DisplayName = _displayName,
             Description = _description,
             Type = typeof(TActor),
-            Connections = new()
-            {
-                Plugin = _plugin,
-                Rules = _rules,
-                Actions = _actions,
-            }
+            Plugin = _plugin,
+            Rules = _rules,
+            Actions = _actions,
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
@@ -117,6 +114,7 @@ public class ActorConfiguration<TActor>(
         action();
         return this;
     }
+
     private IActorConfiguration<TActor> DoLazy(System.Action action)
     {
         _lazyConfigurations.Add(action);

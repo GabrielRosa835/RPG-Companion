@@ -2,15 +2,10 @@ namespace RpgCompanion.Core;
 
 public class RuleDescriptor
 {
-    public RuleKey Key { get; init; } = default!;
-    public RuleConnections Connections { get; init; } = default!;
+    public RuleKey Key { get; init; }
     public double Order { get; init; }
     public string? DisplayName { get; init; }
     public string? Description { get; init; }
-}
-
-public class RuleConnections
-{
     public PluginKey Plugin { get; init; }
     public IReadOnlySet<RuleKey> Conditions { get; init; } = default!;
     public RuleKey? ForRule { get; init; }

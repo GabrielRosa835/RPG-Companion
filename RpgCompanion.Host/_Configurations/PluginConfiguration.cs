@@ -34,96 +34,78 @@ internal class PluginConfiguration(
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);
+        _services.AddKeyedSingleton<World>(_key);
         return descriptor;
     }
 
-    public IPluginConfiguration WithKey(PluginKey key)
-    {
-        _key = key;
-        return this;
-    }
+    public IPluginConfiguration WithKey(PluginKey key) => Do(() => _key = key);
 
-    public IPluginConfiguration WithName(string name)
-    {
-        _name = name;
-        return this;
-    }
+    public IPluginConfiguration WithName(string name) => Do(() => _name = name);
 
-    public IPluginConfiguration WithVersion(string version)
-    {
-        _version = version;
-        return this;
-    }
+    public IPluginConfiguration WithVersion(string version) => Do(() => _version = version);
 
-    public IPluginConfiguration WithInitialization(Initialization initialization)
-    {
-        _metadata.Initialization = initialization;
-        return this;
-    }
+    public IPluginConfiguration WithInitialization(Initialization initialization) =>
+        Do(() => _metadata.Initialization = initialization);
 
     public IPluginConfiguration AddActor<TActor>(Action<IActorConfiguration<TActor>> configure)
-        where TActor : class, IActor
+        where TActor : class, IActor => DoLazy(() =>
     {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new ActorConfiguration<TActor>(
-                _services: _services,
-                _plugin: _key,
-                _pluginRules: _rules);
-            configure(configuration);
-            ActorKey key = configuration.Build();
-            _actors.Add(key);
-        });
-        return this;
-    }
+        var configuration = new ActorConfiguration<TActor>(
+            _services: _services,
+            _plugin: _key,
+            _pluginRules: _rules);
+        configure(configuration);
+        ActorKey key = configuration.Build();
+        _actors.Add(key);
+    });
 
     public IPluginConfiguration AddEvent<TEvent>(Action<IEventConfiguration<TEvent>> configure)
-        where TEvent : class, IEvent
+        where TEvent : class, IEvent => DoLazy(() =>
     {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new EventConfiguration<TEvent>(
-                _services: _services,
-                _plugin: _key,
-                _pluginRules: _rules);
-            configure(configuration);
-            EventKey key = configuration.Build();
-            _events.Add(key);
-        });
+        var configuration = new EventConfiguration<TEvent>(
+            _services: _services,
+            _plugin: _key,
+            _pluginRules: _rules);
+        configure(configuration);
+        EventKey key = configuration.Build();
+        _events.Add(key);
+    });
+
+    public IPluginConfiguration AddRule<T>(Action<IRuleConfiguration<T>> configure) => DoLazy(() =>
+    {
+        var configuration = new RuleConfiguration<T>(
+            _services: _services,
+            _plugin: _key,
+            _pluginRules: _rules,
+            _event: null,
+            _actor: null);
+        configure(configuration);
+        RuleKey key = configuration.Build();
+        _rules.Add(key);
+    });
+
+    public IPluginConfiguration AddRule<T, U>(Action<IRuleConfiguration<T, U>> configure) => DoLazy(() =>
+    {
+        var configuration = new RuleConfiguration<T, U>(
+            _services: _services,
+            _plugin: _key,
+            _pluginRules: _rules,
+            _event: null,
+            _actor: null);
+        configure(configuration);
+        RuleKey key = configuration.Build();
+        _rules.Add(key);
+    });
+
+    private IPluginConfiguration Do(Action action)
+    {
+        action();
         return this;
     }
 
-    public IPluginConfiguration AddRule<T>(Action<IRuleConfiguration<T>> configure)
+    private IPluginConfiguration DoLazy(Action action)
     {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new RuleConfiguration<T>(
-                _services: _services,
-                _plugin: _key,
-                _pluginRules: _rules,
-                _event: null,
-                _actor: null);
-            configure(configuration);
-            RuleKey key = configuration.Build();
-            _rules.Add(key);
-        });
-        return this;
-    }
-
-    public IPluginConfiguration AddRule<T, U>(Action<IRuleConfiguration<T, U>> configure)
-    {
-        _lazyConfigurations.Add(() =>
-        {
-            var configuration = new RuleConfiguration<T, U>(
-                _services: _services,
-                _plugin: _key,
-                _pluginRules: _rules,
-                _event: null,
-                _actor: null);
-            configure(configuration);
-            RuleKey key = configuration.Build();
-            _rules.Add(key);
-        });
+        _lazyConfigurations.Add(action);
         return this;
     }
 }

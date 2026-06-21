@@ -1,16 +1,12 @@
-using System.Text.Json.Serialization;
-using MassTransit;
 using RpgCompanion.Core;
 using RpgCompanion.Host;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddSingleton<IComponentLookup, ComponentLookup>();
 builder.Services.AddSingleton<IComponentGraph, ComponentGraph>();
-builder.Services.AddTransient<IRegistry, Registry>();
+builder.Services.AddSingleton<IEventPublisher, EventPublisher>();
 builder.Services.AddSingleton<ITrigger, Trigger>();
-builder.Services.AddOptions<SerializationOptions>()
-   .Bind(builder.Configuration.GetSection(SerializationOptions.SectionName));
+builder.Services.AddScoped<RuleContext, RuleContextImpl>();
 
 string pluginsFolder = builder.Configuration["PluginsFolder"]!;
 var pluginsManager = new PluginManager();
@@ -18,20 +14,9 @@ var pluginsManager = new PluginManager();
 builder.Services.AddSingleton(pluginsManager);
 await pluginsManager.LoadAll(builder.Services, pluginsFolder);
 
-builder.Services.AddMassTransit(massTransit =>
+builder.Services.AddMediatR(configuration =>
 {
-   massTransit.AddConsumer<EventRaisedRouter>();
-   massTransit.UsingInMemory((context, configuration) =>
-   {
-      configuration.ConfigureJsonSerializerOptions(options =>
-      {
-         // Add your custom System.Text.Json Converter
-         // options.Converters.Add();
-         options.Converters.Add(new JsonStringEnumConverter());
-         return options;
-      });
-      configuration.ConfigureEndpoints(context);
-   });
+    configuration.RegisterServicesFromAssemblyContaining<Program>();
 });
 
 var host = builder.Build();

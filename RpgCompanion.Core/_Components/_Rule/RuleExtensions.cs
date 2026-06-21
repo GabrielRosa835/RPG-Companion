@@ -2,11 +2,11 @@ namespace RpgCompanion.Core;
 
 public static class RuleExtensions
 {
-    extension<T>(IRule<T> rule)
+    extension<T>(Rule<T> rule)
     {
-        public IRule<T> Then(IRule<T> next) => IRule<T>.Of(t => next.Apply(rule.Apply(t)));
-        public IRule<T> Compose(IRule<T> before) => IRule<T>.Of(t => rule.Apply(before.Apply(t)));
-        public static IRule<T> operator |(IRule<T> left, IRule<T> right) => left.Then(right);
-        public static IRule<T> operator &(IRule<T> left, IRule<T> right) => left.Compose(right);
+        public Rule<T> Then(Rule<T> next) => (t, c) => next.Invoke(rule.Invoke(t, c), c);
+        public Rule<T> Compose(Rule<T> first) => (t, c) => rule.Invoke(first.Invoke(t, c), c);
+        public static Rule<T> operator |(Rule<T> left, Rule<T> right) => left.Then(right);
+        public static Rule<T> operator &(Rule<T> left, Rule<T> right) => left.Compose(right);
     }
 }

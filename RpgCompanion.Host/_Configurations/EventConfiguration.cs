@@ -28,12 +28,9 @@ internal class EventConfiguration<TEvent>(
             DisplayName = _displayName,
             Description = _description,
             Type = typeof(TEvent),
-            Connections = new()
-            {
-                Plugin = _plugin,
-                Actions = _actions,
-                Rules = _rules,
-            }
+            Plugin = _plugin,
+            Actions = _actions,
+            Rules = _rules,
         };
         _services.AddKeyedSingleton(_key, descriptor);
         _services.AddSingleton(descriptor);

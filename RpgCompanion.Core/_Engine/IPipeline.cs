@@ -1,7 +1,7 @@
 namespace RpgCompanion.Core;
 
-public interface IPipeline<TEvent> where TEvent : IEvent
+public interface IPipeline<out TEvent> where TEvent : IEvent
 {
-    IPipeline<TEvent> Then<TNext>(RuleKey<TEvent, TNext> transitionRuleKey, System.Action<IPipeline<TNext>>? pipeline = null)
+    IPipeline<TEvent> Then<TNext>(Rule<TEvent, TNext> transition, Action<IPipeline<TNext>>? pipeline = null)
         where TNext : IEvent;
 }
