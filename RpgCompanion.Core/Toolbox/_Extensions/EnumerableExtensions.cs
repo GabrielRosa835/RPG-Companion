@@ -4,7 +4,7 @@ using System.Collections;
 
 public static class EnumerableExtensions
 {
-    extension (IEnumerable enumerable)
+    extension(IEnumerable enumerable)
     {
         public void ForEach(Action<object> action)
         {
@@ -18,6 +18,7 @@ public static class EnumerableExtensions
             }
         }
     }
+
     extension<T>(IEnumerable<T> enumerable)
     {
         public IEnumerable<U> ConvertAll<U>(Func<T, U> mapper)
@@ -72,6 +73,22 @@ public static class EnumerableExtensions
                 return collection;
             }
             return new List<T>(enumerable);
+        }
+
+        /// <summary>
+        /// Warning: performance issues for O(n^2) complexity
+        /// </summary>
+        public IEnumerable<T> Distinct(Func<T, T, bool> predicate)
+        {
+            List<T> seen = [];
+            foreach (var t in enumerable)
+            {
+                if (!seen.Any(maybe => predicate(t, maybe)))
+                {
+                    seen.Add(t);
+                    yield return t;
+                }
+            }
         }
     }
 }

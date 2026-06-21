@@ -1,26 +1,27 @@
-namespace RpgCompanion.Host;
-
-using System.Text.Json;
-using MassTransit;
 using RpgCompanion.Core;
 
-internal class Trigger(IBus _bus, IComponentGraph _components) : ITrigger
+namespace RpgCompanion.Host;
+
+internal class Trigger(
+   IEventPublisher _publisher,
+   IComponentGraph _components)
+   : ITrigger
 {
-    public void Raise<TEvent>(TEvent e, System.Action<IPipeline<TEvent>>? pipeline = null) where TEvent : IEvent
+    public void Raise<TEvent>(TEvent e, Action<IPipeline<TEvent>>? pipeline = null) where TEvent : IEvent
     {
         var descriptor = _components.Events.Find<TEvent>();
-        var transitions = new List<Transition>();
+        var transitions = new List<EventTransition>();
         if (pipeline is not null)
         {
-            var pipelineBuilder = new Pipeline<TEvent>(transitions, _components);
+            var pipelineBuilder = new Pipeline<TEvent>(transitions);
             pipeline.Invoke(pipelineBuilder);
         }
-        var raising = new EventRaisedEvent
+        var raising = new EventContext
         {
-            Data = JsonSerializer.SerializeToElement(e, typeof(TEvent)),
-            Key = descriptor.Key,
-            Transitions = transitions
+            Data = e,
+            Descriptor = descriptor,
+            Transitions = transitions,
         };
-        _bus.Publish(raising).GetAwaiter().GetResult();
+        _publisher.Publish(raising);
     }
 }
