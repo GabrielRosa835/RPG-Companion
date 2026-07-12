@@ -1,4 +1,4 @@
-﻿namespace RpgCompanion.Core.Toolbox;
+﻿namespace RpgCompanion.Toolbox;
 
 /// <summary>
 /// Represents a type with a single value. This type is used to signify

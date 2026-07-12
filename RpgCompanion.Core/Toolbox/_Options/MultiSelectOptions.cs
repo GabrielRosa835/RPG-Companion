@@ -1,4 +1,4 @@
-namespace RpgCompanion.Core.Toolbox;
+namespace RpgCompanion.Toolbox;
 
 public sealed class MultiSelectOptions<T> : OptionGroup<T>
 {

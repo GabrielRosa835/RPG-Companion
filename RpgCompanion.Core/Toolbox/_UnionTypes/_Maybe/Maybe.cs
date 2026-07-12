@@ -1,4 +1,4 @@
-﻿namespace RpgCompanion.Core.Toolbox;
+﻿namespace RpgCompanion.Toolbox;
 
 public readonly struct Maybe<T> : IEquatable<Maybe<T>>
 {

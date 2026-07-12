@@ -1,99 +1,66 @@
-namespace RpgCompanion.Core.Toolbox;
+namespace RpgCompanion.Toolbox;
 
 using System.Collections;
 
 public class SimpleStorage : IStorage
 {
     private readonly Dictionary<string, object?> _values = [];
-    public void Add<T>(StorageKey storageKey, T value) => AddInternal(storageKey.Value, value);
-    public void Add<T>(StorageKey<T> storageKey, T value) => AddInternal(storageKey.Value, value);
-    public void Remove<T>(StorageKey storageKey) => RemoveInternal(storageKey.Value);
-    public void Remove<T>(StorageKey<T> storageKey) => RemoveInternal(storageKey.Value);
 
-    public void Remove(StorageKey groupStorageKey)
+    public void Add<T>(StorageKey<T> storageKey, T value)
     {
-        var keysToRemove = _values
-            .Where(kvp => kvp.Key == groupStorageKey.Value)
-            .Select(kvp => kvp.Key)
-            .ToList();
-        foreach (var key in keysToRemove)
+        _values.TryAdd(storageKey.Value, value);
+    }
+
+    public void Put<T>(StorageKey<T> storageKey, T value)
+    {
+        _values[storageKey.Value] = value;
+    }
+
+    public void Remove<T>(StorageKey<T> storageKey)
+    {
+        _values.Remove(storageKey.Value);
+    }
+
+    public T Get<T>(StorageKey<T> storageKey)
+    {
+        if (_values.TryGetValue(storageKey.Value, out var value))
         {
-            RemoveInternal(key);
-        }
-    }
-
-    public void RemoveRange(params IEnumerable<StorageKey> keys)
-    {
-        var keysArray = keys.ToArray();
-        foreach (var key in _values.Where(kvp => keysArray.Contains(kvp.Key)).Select(kvp => kvp.Key))
-        {
-            RemoveInternal(key);
-        }
-    }
-
-    public void RemoveRange<T>(params IEnumerable<StorageKey<T>> keys)
-    {
-        foreach (StorageKey<T> key in keys)
-        {
-            RemoveInternal(key.Value);
-        }
-    }
-
-    public T Get<T>(StorageKey storageKey) => GetUnsafeInternal<T>(storageKey.Value);
-    public T Get<T>(StorageKey<T> storageKey) => GetUnsafeInternal<T>(storageKey.Value);
-    public T? GetOrDefault<T>(StorageKey storageKey) => GetOrDefaultInternal<T>(storageKey.Value);
-    public T? GetOrDefault<T>(StorageKey<T> storageKey) => GetOrDefaultInternal<T>(storageKey.Value);
-
-    private void AddInternal<T>(string key, T value)
-    {
-        _values[key] = value;
-    }
-
-    private void RemoveInternal(string key)
-    {
-        _values.Remove(key);
-    }
-
-    private T GetUnsafeInternal<T>(string key)
-    {
-        if (_values.TryGetValue(key, out var value))
-        {
-            if (value is null)
-            {
-                return (T) value!;
-            }
-            if (value is T typedValue)
-            {
-                return typedValue;
-            }
+            if (value is null) return (T) value!;
+            if (value is T typedValue) return typedValue;
             const string typeMsg = "Stored value with key '{0}' is not of the asked type, but is '{1}'";
-            string typeMsgFormatted = string.Format(typeMsg, key, value?.GetType().Name ?? "null");
+            string typeMsgFormatted = string.Format(typeMsg, storageKey.Value, value?.GetType().Name ?? "null");
             throw new InvalidOperationException(typeMsgFormatted);
         }
         const string keyMsg = "Key '{0}' not found in dictionary";
-        string keyMsgFormatted = string.Format(keyMsg, key);
+        string keyMsgFormatted = string.Format(keyMsg, storageKey.Value);
         throw new KeyNotFoundException(keyMsgFormatted);
     }
 
-    private T? GetOrDefaultInternal<T>(string key)
+    public T? GetOrDefault<T>(StorageKey<T> storageKey)
     {
-        if (_values.TryGetValue(key, out var value))
+        if (!_values.TryGetValue(storageKey.Value, out var value))
         {
-            if (value is null)
-            {
-                return (T) value!;
-            }
-            if (value is T typedValue)
-            {
-                return typedValue;
-            }
+            return default;
         }
-
-        return default;
+        return value switch
+        {
+            null => (T) value!,
+            T typedValue => typedValue,
+            _ => default
+        };
     }
 
-    public IEnumerator<(string Key, object? Value)> GetEnumerator()
-        => _values.Select(kvp => (kvp.Key, kvp.Value)).GetEnumerator();
+    public T Acquire<T>(StorageKey<T> storageKey)
+    {
+        var value = Get(storageKey);
+        Remove(storageKey);
+        return value;
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public T? AcquireOrDefault<T>(StorageKey<T> storageKey)
+    {
+        var value = GetOrDefault(storageKey);
+        Remove(storageKey);
+        return value;
+    }
 }

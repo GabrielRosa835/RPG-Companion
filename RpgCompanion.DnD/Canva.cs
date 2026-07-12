@@ -1,7 +1,7 @@
 namespace RpgCompanion.DnD;
 
-using Core;
-using Core.Toolbox;
+using Events;
+using Toolbox;
 
 public interface IEnvironment;
 
@@ -20,7 +20,7 @@ public static class Canva
 
     extension(World world)
     {
-        public IEnvironment? Environment => world.Variables.GetOrDefault(EnvironmentKey);
+        public IEnvironment? Environment => world.GetOrDefault(EnvironmentKey);
     }
 
     public static void Teste(World world)

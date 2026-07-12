@@ -1,4 +1,4 @@
-﻿namespace RpgCompanion.Core.Toolbox;
+﻿namespace RpgCompanion.Toolbox;
 
 public abstract class ValidatorBase<T> : IValidator<T>
 {

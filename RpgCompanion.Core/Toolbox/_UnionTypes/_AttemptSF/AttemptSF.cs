@@ -1,4 +1,4 @@
-﻿namespace RpgCompanion.Core.Toolbox;
+﻿namespace RpgCompanion.Toolbox;
 
 public readonly struct Attempt<TSuccess, TFailure> : IEquatable<Attempt<TSuccess, TFailure>>
 {
