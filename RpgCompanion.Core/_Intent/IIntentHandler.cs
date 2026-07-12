@@ -1,11 +1,5 @@
 namespace RpgCompanion.Core;
 
-public interface IIntentBase;
-
-public interface IIntent : IIntentBase;
-
-public interface IIntent<out TResult> : IIntentBase;
-
 public interface IIntentHandler<in TIntent> where TIntent : IIntent
 {
     Task Handle(TIntent intent);
