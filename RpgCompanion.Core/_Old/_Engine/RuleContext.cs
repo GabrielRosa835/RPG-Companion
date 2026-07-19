@@ -3,7 +3,7 @@ namespace RpgCompanion.Events;
 using Core;
 using Toolbox;
 
-public abstract class RuleContext : IRegistry, IStorage, ITrigger
+public abstract class RuleContext : IRegistry, IStorage, IEventTrigger
 {
     public abstract World World { get; }
 

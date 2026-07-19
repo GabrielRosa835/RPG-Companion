@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using MongoDB.Driver;
 
-public class MongoQuery<T> : IQuery<T> where T : class, IEntity<T>
+public class MongoQuery<T> : IQuery<T> where T : class, IEntity
 {
     private readonly MongoDatabase _db;
     private readonly IMongoCollection<T> _collection;

@@ -18,23 +18,15 @@ public class EventContextImpl(IRegistry _registry, IStorage _storage) : EventCon
     public override IStorage Storage => _storage;
 
     /// <summary>
-    /// Calmly stops the pipeline, calling Teardown on exit
+    /// Starts a new event pipeline and returns the pipeline's task
     /// </summary>
-    public override void Exit(EventResult result) => ExecutionContext.Exit(result);
+    public override EventTask Raise(Event e, CancellationToken cancellationToken = default) =>
+        ExecutionContext.Engine.Raise(e, cancellationToken);
 
     /// <summary>
     /// Completely stops the pipeline by cancelling the token
     /// </summary>
-    public override void Halt(EventResult result) => ExecutionContext.Halt(result);
+    public override void Halt() => ExecutionContext.CancellationSource?.Cancel();
 
-    /// <summary>
-    /// Starts a new event pipeline and returns the pipeline's task
-    /// </summary>
-    public override EventTask Raise(Event e, CancellationToken? cancellationToken = null) =>
-        ExecutionContext.Raise(e, cancellationToken);
-
-    /// <summary>
-    /// Queues the next event to run in the pipeline
-    /// </summary>
-    public override void Next(Event e) => ExecutionContext.Next(e);
+    public override CancellationToken CancellationToken => ExecutionContext.CancellationSource.Token;
 }

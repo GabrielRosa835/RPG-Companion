@@ -6,7 +6,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton<IComponentGraph, ComponentGraph>();
 builder.Services.AddSingleton<EventPublisher>();
 builder.Services.AddSingleton<Trigger>();
-builder.Services.AddSingleton<ITrigger, Trigger>();
+builder.Services.AddSingleton<IEventTrigger, Trigger>();
 builder.Services.AddScoped<RuleContext, RuleContextImpl>();
 
 string pluginsFolder = builder.Configuration["PluginsFolder"]!;

@@ -1,6 +1,6 @@
 namespace RpgCompanion.Core;
 
-public abstract record Rel<T> where T : class, IEntity<T>
+public abstract record Rel<T> where T : class, IEntity
 {
     public sealed record Loaded(T Entity) : Rel<T>;
     public sealed record Unloaded(DatabaseId<T> DbId) : Rel<T>;

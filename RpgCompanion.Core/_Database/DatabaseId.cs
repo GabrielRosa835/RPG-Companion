@@ -9,7 +9,7 @@ public readonly record struct DatabaseId
     public DatabaseId<TFor> For<TFor>() where TFor : class, IEntity<TFor> => new(Value);
 }
 
-public readonly record struct DatabaseId<TFor> where TFor : class, IEntity<TFor>
+public readonly record struct DatabaseId<TFor> where TFor : class, IEntity
 {
     public string Value { get; }
     public DatabaseId() => Value = Guid.CreateVersion7().ToString("N");

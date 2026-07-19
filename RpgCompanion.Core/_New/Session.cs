@@ -2,6 +2,6 @@ namespace RpgCompanion.Events;
 
 public class SessionContext
 {
-public List<Player> Players;
-        public Player Master;
+    public List<Player> Players;
+    public Player Master;
 }
