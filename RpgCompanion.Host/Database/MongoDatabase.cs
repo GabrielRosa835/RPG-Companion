@@ -2,15 +2,10 @@ namespace RpgCompanion.Host.Database;
 
 using MongoDB.Driver;
 
-public class MongoDatabase : IDatabase
+public class MongoDatabase(
+    IMongoDatabase _database)
+    : IDatabase
 {
-    private readonly IMongoDatabase _database;
-
-    public MongoDatabase(IMongoDatabase database)
-    {
-        _database = database;
-    }
-    
     internal static string GetCollectionName<T>() => typeof(T).FullName!.ToLowerInvariant().Replace('.', '_');
 
     internal IMongoCollection<T> GetCollection<T>() where T : class, IEntity

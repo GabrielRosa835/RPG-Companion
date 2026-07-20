@@ -4,7 +4,10 @@ using System.Collections.Concurrent;
 using Core;
 using Toolbox;
 
-internal class EventEngine(IServiceScopeFactory _scopeFactory) : IEventTrigger
+internal class EventEngine(
+    IServiceScopeFactory _scopeFactory,
+    IEnvironmentAccessor _environmentAccessor)
+    : IEventTrigger
 {
     private static readonly TimeSpan FallbackSleepTime = TimeSpan.FromMilliseconds(100);
 
@@ -26,7 +29,6 @@ internal class EventEngine(IServiceScopeFactory _scopeFactory) : IEventTrigger
         {
             var result = await StartExecution(ctx);
             ctx.Task.Result = result;
-            // Do something with the result? e.g. set ctx.Task.Result = result;
         }
         finally
         {
@@ -41,7 +43,7 @@ internal class EventEngine(IServiceScopeFactory _scopeFactory) : IEventTrigger
 
         var registry = new Registry(scope.ServiceProvider);
         var storage = new ConcurrentDynamicStorage();
-        var eventContext = new EventContextImpl(registry, storage);
+        var eventContext = new EventContext(registry, storage);
 
         var executionContext = new EventExecutionContext(eventContext)
         {
@@ -71,7 +73,7 @@ internal class EventEngine(IServiceScopeFactory _scopeFactory) : IEventTrigger
                 try
                 {
                     // 1. SETUP PHASE
-                    directive = ctx.Current.Setup switch
+                    directive = ctx.Current.EventSetup switch
                     {
                         EventSetup.Sync s => s.Handler(ctx.Context),
                         EventSetup.Async s => await s.Handler(ctx.Context),
@@ -81,14 +83,14 @@ internal class EventEngine(IServiceScopeFactory _scopeFactory) : IEventTrigger
                     // 2. EXECUTE PHASE (Skip if Setup told us to Stop/Fault)
                     if (directive is not EventResult.Stopped and not EventResult.Faulted)
                     {
-                        TimeSpan interval = ctx.Current.Execute is EventExecutor.Timed t && t.Interval > TimeSpan.Zero
+                        TimeSpan interval = ctx.Current.EventExecutor is EventExecutor.Timed t && t.Interval > TimeSpan.Zero
                             ? t.Interval
                             : FallbackSleepTime;
 
                         bool isRepeating = true;
                         while (isRepeating && !ct.IsCancellationRequested)
                         {
-                            var execResult = ctx.Current.Execute switch
+                            var execResult = ctx.Current.EventExecutor switch
                             {
                                 EventExecutor.Sync s => s.Handler(ctx.Context),
                                 EventExecutor.Async s => await s.Handler(ctx.Context),
@@ -122,7 +124,7 @@ internal class EventEngine(IServiceScopeFactory _scopeFactory) : IEventTrigger
                 // 3. TEARDOWN PHASE
                 try
                 {
-                    var teardownResult = ctx.Current.Teardown switch
+                    var teardownResult = ctx.Current.EventTeardown switch
                     {
                         EventTeardown.Sync s => s.Handler(ctx.Context),
                         EventTeardown.Async s => await s.Handler(ctx.Context),

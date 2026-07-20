@@ -1,0 +1,25 @@
+namespace RpgCompanion.Canva;
+
+using Core;
+
+public class Entity : IEntity<Entity>
+{
+    public DatabaseId<Entity> DbId { get; init; }
+    public string TextValue { get; set; } = default!;
+    public int NumberValue { get; set; }
+    public ComplexValue ComplexValue { get; set; } = default!;
+    public Rel<OtherEntity> RelationalValue { get; set; } = Rel.None<OtherEntity>();
+}
+
+public class ComplexValue
+{
+    public string TextValue { get; set; }
+    public int NumberValue { get; set; }
+}
+
+public class OtherEntity : IEntity<OtherEntity>
+{
+    public DatabaseId<OtherEntity> DbId { get; init; }
+    public string TextValue { get; set; } = default!;
+    public int NumberValue { get; set; }
+}

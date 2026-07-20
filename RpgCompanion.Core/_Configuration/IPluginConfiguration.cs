@@ -6,7 +6,7 @@ public interface IPluginConfiguration
     public IPluginConfiguration WithVersion(string version);
 
     public IPluginConfiguration WithInitialization(InitializationHandler handler);
-    public IPluginConfiguration WithInitialization(InitializationAsyncHandler handler);
+    public IPluginConfiguration WithInitialization(InitializationHandlerAsync handler);
 
     public IPluginConfiguration AddIntent<TIntent>(IntentHandler<TIntent> handler) where TIntent : IIntent;
     public IPluginConfiguration AddIntent<TIntent>(IntentHandlerAsync<TIntent> handler) where TIntent : IIntent;

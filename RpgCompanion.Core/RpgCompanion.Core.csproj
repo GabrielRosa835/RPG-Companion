@@ -13,9 +13,4 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="_Old\" />
-
-  </ItemGroup>
-
 </Project>

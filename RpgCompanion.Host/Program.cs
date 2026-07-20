@@ -1,26 +1,55 @@
-using RpgCompanion.Events;
+using MongoDB.Bson.Serialization;
+using MongoDB.Driver;
 using RpgCompanion.Host;
+using RpgCompanion.Host.Database;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddSingleton<IComponentGraph, ComponentGraph>();
-builder.Services.AddSingleton<EventPublisher>();
-builder.Services.AddSingleton<Trigger>();
-builder.Services.AddSingleton<IEventTrigger, Trigger>();
-builder.Services.AddScoped<RuleContext, RuleContextImpl>();
+var pluginsFolder = builder.Configuration["PluginsFolder"] ?? throw new InvalidOperationException("PluginsFolder is missing.");
+var loader = new PluginLoader(builder.Services, pluginsFolder);
+var plugins = await loader.LoadAll();
+var manager = new PluginManager(plugins);
 
-string pluginsFolder = builder.Configuration["PluginsFolder"]!;
-var pluginsManager = new PluginManager();
 
-builder.Services.AddSingleton(pluginsManager);
-await pluginsManager.LoadAll(builder.Services, pluginsFolder);
+#region Services
 
-builder.Services.AddMediatR(configuration =>
+builder.Services.AddSingleton(manager);
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
 {
-    configuration.RegisterServicesFromAssemblyContaining<Program>();
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new MongoClient(config["Persistence:ConnectionStrings:Local"]);
 });
 
+builder.Services.AddScoped<IMongoDatabase>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(config["Persistence:DatabaseName"]);
+});
+
+#endregion
+
+// 1. Register your custom serializers for Id and Rel
+BsonSerializer.RegisterSerializationProvider(new AppSerializationProvider());
+
+// 2. Map the IEntity interface so Mongo knows DbId is the primary key mapping to "_id"
+BsonClassMap.RegisterClassMap<IEntity>(cm =>
+{
+    cm.AutoMap();
+    cm.MapIdProperty(e => e.DbId);
+});
+
+
 var host = builder.Build();
+
+await host.StartAsync();
+
+var scopeFactory = host.Services.GetRequiredService<IServiceScopeFactory>();
+var initializer = new PluginInitializer(scopeFactory, plugins);
+await initializer.InitializeAll();
+
+await host.WaitForShutdownAsync();
 
 // Inside the Host's Program.cs or startup logic:
 
@@ -46,10 +75,3 @@ var host = builder.Build();
 //
 //     return Results.Ok(result);
 // });
-
-await host.StartAsync();
-
-var serviceScopeFactory = host.Services.GetRequiredService<IServiceScopeFactory>();
-await pluginsManager.InitializeAll(serviceScopeFactory);
-
-await host.WaitForShutdownAsync();

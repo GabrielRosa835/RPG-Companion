@@ -6,5 +6,4 @@ public class EventDescriptor
     public string? DisplayName { get; init; }
     public string? Description { get; init; }
     public Type Type { get; init; } = default!;
-    public PluginKey Plugin { get; init; }
 }

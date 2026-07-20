@@ -1,9 +1,0 @@
-namespace RpgCompanion.Events;
-
-public interface IConditionConfiguration<T>
-{
-    IConditionConfiguration<T> WithKey(RuleKey<T, bool> key);
-    IConditionConfiguration<T> WithName(string name);
-    IConditionConfiguration<T> WithDescription(string description);
-    IConditionConfiguration<T> Export(Rule<T, bool> rule);
-}

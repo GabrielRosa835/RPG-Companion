@@ -1,13 +1,8 @@
 namespace RpgCompanion.Core;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
-public class EntitySubtypeAttribute : Attribute
+public class HasSubtypeAttribute : Attribute
 {
     public Type KnownType { get; }
-    public EntitySubtypeAttribute(Type knownType) => KnownType = knownType;
-}
-
-public interface IPluginConfiguration2
-{
-    void RegisterPolymorphicHierarchy<TBase>(params Type[] derivedTypes);
+    public HasSubtypeAttribute(Type knownType) => KnownType = knownType;
 }

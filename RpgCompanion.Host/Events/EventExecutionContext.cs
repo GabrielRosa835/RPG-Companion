@@ -4,7 +4,7 @@ internal class EventExecutionContext : IDisposable
 {
     internal readonly object Lock = new();
 
-    public EventExecutionContext(EventContextImpl eventContext)
+    public EventExecutionContext(EventContext eventContext)
     {
         Context = eventContext;
         eventContext.ExecutionContext = this;
@@ -18,7 +18,7 @@ internal class EventExecutionContext : IDisposable
     internal IServiceScope ServiceScope { get; init; } = default!;
 
     internal Guid Id { get; } = Guid.NewGuid();
-    internal EventContextImpl Context { get; }
+    internal EventContext Context { get; }
 
     public void Dispose()
     {
