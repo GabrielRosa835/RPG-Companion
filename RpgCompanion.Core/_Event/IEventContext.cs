@@ -20,12 +20,16 @@ public interface IEventContext : IEventTrigger
     CancellationToken CancellationToken { get; }
 
     /// <summary>
-    /// Starts a new event pipeline and returns the pipeline's task
-    /// </summary>
-    EventTask Raise(Event e, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Completely stops the pipeline by cancelling the token
     /// </summary>
-    void Halt();
+    void Halt(bool throwException = false);
+
+    /// <summary>
+    /// Stops the pipeline, finishes executing the event methods and then return with the result
+    /// </summary>
+    /// <param name="result"></param>
+    void Exit(EventResult result);
+
+    void Continue(Event nextEvent);
+    void Continue<TEvent>() where TEvent : Event;
 }

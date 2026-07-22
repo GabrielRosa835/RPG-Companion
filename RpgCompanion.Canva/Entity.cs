@@ -13,7 +13,7 @@ public class Entity : IEntity<Entity>
 
 public class ComplexValue
 {
-    public string TextValue { get; set; }
+    public string TextValue { get; set; } = default!;
     public int NumberValue { get; set; }
 }
 

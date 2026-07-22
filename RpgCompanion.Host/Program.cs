@@ -2,6 +2,8 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using RpgCompanion.Host;
 using RpgCompanion.Host.Database;
+using RpgCompanion.Host.Events;
+using RpgCompanion.Host.Intents;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -14,6 +16,11 @@ var manager = new PluginManager(plugins);
 #region Services
 
 builder.Services.AddSingleton(manager);
+
+builder.Services.AddSingleton<IEventTrigger, EventEngine>();
+builder.Services.AddSingleton<IEnvironmentAccessor, EnvironmentAccessor>();
+builder.Services.AddSingleton<DefaultEventFactory>();
+builder.Services.AddSingleton<IIntentDispatcher, IntentDispatcher>();
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
@@ -32,13 +39,6 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
 
 // 1. Register your custom serializers for Id and Rel
 BsonSerializer.RegisterSerializationProvider(new AppSerializationProvider());
-
-// 2. Map the IEntity interface so Mongo knows DbId is the primary key mapping to "_id"
-BsonClassMap.RegisterClassMap<IEntity>(cm =>
-{
-    cm.AutoMap();
-    cm.MapIdProperty(e => e.DbId);
-});
 
 
 var host = builder.Build();

@@ -9,7 +9,8 @@ internal class EventEngine(
     IEnvironmentAccessor _environmentAccessor)
     : IEventTrigger
 {
-    private static readonly TimeSpan FallbackSleepTime = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan MinimumExecutionInterval = TimeSpan.FromMilliseconds(10);
+    private static readonly TimeSpan FallbackExecutionInterval = TimeSpan.FromMilliseconds(100);
 
     private readonly ConcurrentDictionary<Guid, EventExecutionContext> _activeContexts = new();
 
@@ -23,12 +24,11 @@ internal class EventEngine(
         return executionContext.Task;
     }
 
-    private async Task RunPipelineAsync(EventExecutionContext ctx)
+    private async Task<EventResult> RunPipelineAsync(EventExecutionContext ctx)
     {
         try
         {
-            var result = await StartExecution(ctx);
-            ctx.Task.Result = result;
+            return await StartExecution(ctx);
         }
         finally
         {
@@ -37,22 +37,23 @@ internal class EventEngine(
         }
     }
 
-    private EventExecutionContext CreateContext(Event first, CancellationToken? ct)
+    private EventExecutionContext CreateContext(Event first, CancellationToken ct)
     {
+        var currentPluginKey = _environmentAccessor.CurrentPlugin?.Key;
         var scope = _scopeFactory.CreateScope();
 
-        var registry = new Registry(scope.ServiceProvider);
-        var storage = new ConcurrentDynamicStorage();
-        var eventContext = new EventContext(registry, storage);
+        var factory = currentPluginKey.HasValue ? null : scope.ServiceProvider.GetKeyedService<IEventFactory>(currentPluginKey);
+        factory ??= scope.ServiceProvider.GetRequiredService<DefaultEventFactory>();
 
-        var executionContext = new EventExecutionContext(eventContext)
+        var executionContext = new EventExecutionContext
         {
             Engine = this,
             Current = first,
             ServiceScope = scope,
-            CancellationSource = ct is not null
-                ? CancellationTokenSource.CreateLinkedTokenSource(ct.Value)
-                : new CancellationTokenSource(),
+            CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(ct),
+            Factory = factory,
+            Registry = new Registry(scope.ServiceProvider),
+            Storage = new ConcurrentDynamicStorage(),
         };
 
         _activeContexts.TryAdd(executionContext.Id, executionContext);
@@ -65,99 +66,52 @@ internal class EventEngine(
 
         try
         {
-            while (!ct.IsCancellationRequested)
+            while (!ct.IsCancellationRequested && !ctx.Exiting)
             {
-                // Track the primary directive for this specific Event
-                EventResult directive = new EventResult.None();
+                try
+                {
+                    await ctx.Current.Setup(ctx, ct);
+                }
+                catch (OperationCanceledException) {}
+
+                TimeSpan interval = FallbackExecutionInterval;
+                if (ctx.Current.ExecutionInterval.HasValue)
+                {
+                    interval = ctx.Current.ExecutionInterval > MinimumExecutionInterval
+                        ? ctx.Current.ExecutionInterval.Value
+                        : MinimumExecutionInterval;
+                }
 
                 try
                 {
-                    // 1. SETUP PHASE
-                    directive = ctx.Current.EventSetup switch
+                    while (!ct.IsCancellationRequested && !ctx.Continuing)
                     {
-                        EventSetup.Sync s => s.Handler(ctx.Context),
-                        EventSetup.Async s => await s.Handler(ctx.Context),
-                        _ => new EventResult.None(),
-                    };
+                        await ctx.Current.Execute(ctx, ct);
 
-                    // 2. EXECUTE PHASE (Skip if Setup told us to Stop/Fault)
-                    if (directive is not EventResult.Stopped and not EventResult.Faulted)
-                    {
-                        TimeSpan interval = ctx.Current.EventExecutor is EventExecutor.Timed t && t.Interval > TimeSpan.Zero
-                            ? t.Interval
-                            : FallbackSleepTime;
-
-                        bool isRepeating = true;
-                        while (isRepeating && !ct.IsCancellationRequested)
+                        try
                         {
-                            var execResult = ctx.Current.EventExecutor switch
-                            {
-                                EventExecutor.Sync s => s.Handler(ctx.Context),
-                                EventExecutor.Async s => await s.Handler(ctx.Context),
-                                EventExecutor.TimedSync s => s.Handler(ctx.Context),
-                                EventExecutor.TimedAsync s => await s.Handler(ctx.Context),
-                                _ => new EventResult.None(),
-                            };
-
-                            if (execResult is EventResult.Repeat)
-                            {
-                                await Task.Delay(interval, ct);
-                            }
-                            else
-                            {
-                                // Capture the final instruction from Execute (e.g., Continue, Stop, Completed)
-                                directive = execResult;
-                                isRepeating = false;
-                            }
+                            await Task.Delay(interval, ct);
                         }
+                        catch (OperationCanceledException) {}
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    directive = new EventResult.Stopped();
-                }
-                catch (Exception ex)
-                {
-                    directive = new EventResult.Faulted(ex);
-                }
+                catch (OperationCanceledException) {}
 
-                // 3. TEARDOWN PHASE
                 try
                 {
-                    var teardownResult = ctx.Current.EventTeardown switch
-                    {
-                        EventTeardown.Sync s => s.Handler(ctx.Context),
-                        EventTeardown.Async s => await s.Handler(ctx.Context),
-                        _ => new EventResult.None(),
-                    };
+                    var safeToken = ct.IsCancellationRequested ? CancellationToken.None : ct;
+                    await ctx.Current.Teardown(ctx, safeToken);
+                }
+                catch (OperationCanceledException) {}
 
-                    // If Teardown returns a critical directive (Fault or Continue), let it override.
-                    // Otherwise, preserve the directive from Setup/Execute.
-                    if (teardownResult is EventResult.Faulted or EventResult.Continue)
-                    {
-                        directive = teardownResult;
-                    }
-                }
-                catch (Exception ex)
+                if (ctx.Continuing)
                 {
-                    directive = new EventResult.Faulted(ex);
-                }
-
-                // 4. EVALUATE PIPELINE TRANSITION
-                if (directive is EventResult.Continue c && !ct.IsCancellationRequested)
-                {
-                    // No lock needed here unless ctx.Current is actively being mutated by external threads,
-                    // which breaks the single-responsibility pipeline concept anyway.
-                    ctx.Current = c.NextEvent;
-                }
-                else
-                {
-                    // Break the infinite loop! Return whatever state we ended on.
-                    return directive is EventResult.None ? new EventResult.Completed() : directive;
+                    ctx.Current = ctx.Next!;
+                    ctx.Next = null;
                 }
             }
 
-            return new EventResult.Stopped(); // Reached if the while loop is broken by cancellation
+            return ct.IsCancellationRequested ? new EventResult.Stopped() : ctx.Result!;
         }
         catch (Exception ex)
         {

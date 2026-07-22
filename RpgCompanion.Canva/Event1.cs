@@ -2,23 +2,24 @@ namespace RpgCompanion.Canva;
 
 using Core;
 
-public record Event1() : Event(Setup, Execute, Teardown), IEventTemplate
+public class Event1 : Event
 {
-    public static EventSetup Setup => new EventSetup.Sync((IEventContext ctx) =>
-    {
-        Console.WriteLine($"{nameof(Event1)}.{nameof(Setup)} called");
-        return new EventResult.None();
-    });
+    private int _passes = 0;
 
-    public static EventExecutor Execute => new EventExecutor.Sync((IEventContext ctx) =>
+    public override ValueTask Setup(IEventContext context, CancellationToken CancellationToken)
     {
-        Console.WriteLine($"{nameof(Event1)}.{nameof(Execute)} called");
-        return new EventResult.Continue(new Event2());
-    });
-
-    public static EventTeardown Teardown => new EventTeardown.Sync((IEventContext ctx) =>
+        Log.Debug("{0} (Thread {1}): {2}", this.GetType().Name, Thread.CurrentThread.ManagedThreadId, nameof(Setup));
+        return Completed;
+    }
+    public override ValueTask Execute(IEventContext context, CancellationToken CancellationToken)
     {
-        Console.WriteLine($"{nameof(Event1)}.{nameof(Teardown)} called");
-        return new EventResult.None();
-    });
+        Log.Debug("{0} (Thread {1}): {2}", this.GetType().Name, Thread.CurrentThread.ManagedThreadId, nameof(Execute));
+        if (++_passes >= 3) context.Continue(new Event2());
+        return Completed;
+    }
+    public override ValueTask Teardown(IEventContext context, CancellationToken CancellationToken)
+    {
+        Log.Debug("{0} (Thread {1}): {2}", this.GetType().Name, Thread.CurrentThread.ManagedThreadId, nameof(Teardown));
+        return Completed;
+    }
 }

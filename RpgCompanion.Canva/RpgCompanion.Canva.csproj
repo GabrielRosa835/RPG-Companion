@@ -4,11 +4,19 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\RpgCompanion.Core\RpgCompanion.Core.csproj" />
     </ItemGroup>
+
+    <Target Name="MovingCompiledPlugin" AfterTargets="Build">
+      <PropertyGroup>
+        <PluginsFolder>$(MSBuildProjectDirectory)/../Plugins/</PluginsFolder>
+        <LibPath>$(TargetDir)$(AssemblyName).dll</LibPath>
+      </PropertyGroup>
+      <Message Text="Moving RpgCompanion.Canva to plugins folder..." Importance="high" />
+      <Exec Command="cp '$(LibPath)' '$(PluginsFolder)'" />
+    </Target>
 
 </Project>

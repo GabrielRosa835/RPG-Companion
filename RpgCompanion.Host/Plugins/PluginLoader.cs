@@ -11,7 +11,7 @@ public class PluginLoader
 
     public PluginLoader(IServiceCollection services, string sourcesFolder)
     {
-        if (!Directory.Exists(_sourcesFolder))
+        if (!Directory.Exists(sourcesFolder))
         {
             throw new DirectoryNotFoundException(sourcesFolder);
         }
@@ -71,20 +71,24 @@ public class PluginLoader
                 manifestType = type;
                 continue;
             }
-            if (type.GetCustomAttributes(typeof(HasSubtypeAttribute), false).Any())
+            if (type.Implements(typeof(IEntity)))
             {
-                BsonClassMap.RegisterClassMap(new BsonClassMap(type));
+                var cm = new BsonClassMap(type);
+                cm.AutoMap();
+                cm.MapIdProperty(nameof(IEntity.DbId));
+                BsonClassMap.RegisterClassMap(cm);
 
-                var attributes = type
+                var subtypeAttributes = type
                     .GetCustomAttributes(typeof(HasSubtypeAttribute), false)
-                    .OfType<HasSubtypeAttribute>();
+                    .OfType<HasSubtypeAttribute>()
+                    .ToList();
 
-                foreach (var attr in attributes)
+                if (subtypeAttributes.Count > 0)
                 {
-                    BsonSerializer.LookupSerializer(type); // Forces initialization
-                    BsonClassMap.GetRegisteredClassMaps()
-                        .First(cm => cm.ClassType == type)
-                        .AddKnownType(attr.KnownType);
+                    foreach (var attr in subtypeAttributes)
+                    {
+                        cm.AddKnownType(attr.KnownType);
+                    }
                 }
             }
         }

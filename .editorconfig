@@ -71,6 +71,7 @@ indent_style = tab
 [*.{cs,csx,cake,vb,vbx}]
 # Default Severity for all .NET Code Style rules below
 dotnet_analyzer_diagnostic.severity = none
+disable_formatter = true
 
 # 'using' directive preferences
 csharp_using_directive_placement = inside_namespace:warning
