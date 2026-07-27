@@ -7,11 +7,3 @@ public interface IIntentContext
     /// </summary>
     IRegistry Registry { get; }
 }
-
-public interface IIntentContextAsync : IIntentContext
-{
-    /// <summary>
-    /// The operation's CancellationToken
-    /// </summary>
-    CancellationToken CancellationToken { get; }
-}

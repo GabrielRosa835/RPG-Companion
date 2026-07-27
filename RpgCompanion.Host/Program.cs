@@ -7,20 +7,20 @@ using RpgCompanion.Host.Intents;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-var pluginsFolder = builder.Configuration["PluginsFolder"] ?? throw new InvalidOperationException("PluginsFolder is missing.");
-var loader = new PluginLoader(builder.Services, pluginsFolder);
-var plugins = await loader.LoadAll();
-var manager = new PluginManager(plugins);
+builder.Services.AddSingleton<PluginArchives>();
+builder.Services.AddSingleton<EntityArchives>();
+builder.Services.AddSingleton<EventArchives>();
+builder.Services.AddSingleton<IntentArchives>();
 
+builder.Services.AddSingleton<PluginManager>();
+builder.Services.AddSingleton<PluginLoader>();
+builder.Services.AddSingleton<PluginInitializer>();
 
-#region Services
-
-builder.Services.AddSingleton(manager);
-
-builder.Services.AddSingleton<IEventTrigger, EventEngine>();
-builder.Services.AddSingleton<IEnvironmentAccessor, EnvironmentAccessor>();
+builder.Services.AddSingleton<EventEngine>();
+builder.Services.AddSingleton<EnvironmentAccessor>();
+builder.Services.AddSingleton<IntentDispatcher>();
 builder.Services.AddSingleton<DefaultEventFactory>();
-builder.Services.AddSingleton<IIntentDispatcher, IntentDispatcher>();
+builder.Services.AddSingleton<IEnvironmentAccessor>(sp => sp.GetRequiredService<EnvironmentAccessor>());
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
@@ -35,19 +35,22 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
     return client.GetDatabase(config["Persistence:DatabaseName"]);
 });
 
-#endregion
-
 // 1. Register your custom serializers for Id and Rel
 BsonSerializer.RegisterSerializationProvider(new AppSerializationProvider());
-
 
 var host = builder.Build();
 
 await host.StartAsync();
 
-var scopeFactory = host.Services.GetRequiredService<IServiceScopeFactory>();
-var initializer = new PluginInitializer(scopeFactory, plugins);
-await initializer.InitializeAll();
+var pluginManager = host.Services.GetRequiredService<PluginManager>();
+var pluginLoader = host.Services.GetRequiredService<PluginLoader>();
+var pluginInitializer = host.Services.GetRequiredService<PluginInitializer>();
+var configuration = host.Services.GetRequiredService<IConfiguration>();
+
+var plugins = await pluginManager.FindPlugins(configuration[ConfigKeys.PluginsFolder]!);
+var loadResults = await pluginLoader.LoadMany(plugins);
+var loaded = loadResults.Where(r => r is ILoadResult.Completed).Select(r => ((ILoadResult.Completed) r).Metadata);
+var initializationResults = await pluginInitializer.InitializeMany(plugins);
 
 await host.WaitForShutdownAsync();
 

@@ -1,51 +1,52 @@
 namespace RpgCompanion.Host.Intents;
 
-public class IntentDispatcher(
-    IServiceScopeFactory _scopeFactory)
+internal class IntentDispatcher(
+    PluginArchives _pluginArchives,
+    IntentArchives _intentArchives,
+    EnvironmentAccessor _environmentAccessor)
     : IIntentDispatcher
 {
-    public IntentTask Dispatch(IIntent intent, CancellationToken cancellationToken = default)
+    public async Task Dispatch(IIntent intent, CancellationToken cancellationToken = default)
     {
-        var ctx = CreateContext(intent, cancellationToken);
-        return new IntentTask(ExecuteAsync(intent, ctx));
+        var (ctx, executor, serviceProvider) = CreateContext(intent, cancellationToken);
+        await using (ctx)
+        {
+            await executor.Execute(serviceProvider, intent, ctx, cancellationToken).ConfigureAwait(false);
+        }
     }
 
-    public IntentTask<TResult> Dispatch<TResult>(IIntent<TResult> intent, CancellationToken cancellationToken = default)
+    public async Task<TResult> Dispatch<TResult>(IIntent<TResult> intent, CancellationToken cancellationToken = default)
     {
-        var ctx = CreateContext(intent, cancellationToken);
-        return new IntentTask<TResult>(ExecuteAndCastAsync(intent, ctx));
+        var (ctx, executor, serviceProvider) = CreateContext(intent, cancellationToken);
+        await using (ctx)
+        {
+            var result = await executor.Execute(serviceProvider, intent, ctx, cancellationToken).ConfigureAwait(false);
+            return (TResult) result!;
+        }
     }
 
-    private IntentContext CreateContext(IIntentBase intent, CancellationToken cancellationToken)
+    private (IntentContext Context, IntentExecutor Executor, IServiceProvider Services) CreateContext(IIntentBase intent, CancellationToken cancellationToken)
     {
-        var scope = _scopeFactory.CreateAsyncScope();
-        var intentType = intent.GetType();
-        var executor = scope.ServiceProvider.GetRequiredKeyedService<IntentExecutor>(intentType);
+        if (_environmentAccessor.CurrentPlugin is null)
+        {
+            var descriptor = _intentArchives[intent.GetType()];
+            _environmentAccessor.CurrentPlugin = new PluginContext
+            {
+                Key = descriptor.PluginKey,
+            };
+        }
+
+        var pluginServices = _pluginArchives[_environmentAccessor.CurrentPlugin.Key].Services;
+        var scopeFactory = pluginServices.GetRequiredService<IServiceScopeFactory>();
+        var scope = scopeFactory.CreateAsyncScope();
 
         var cts = cancellationToken.CanBeCanceled
             ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
             : new CancellationTokenSource();
 
-        return new IntentContext(scope, new Registry(scope.ServiceProvider), cts)
-        {
-            Executor = executor,
-        };
-    }
+        var executor = scope.ServiceProvider.GetRequiredService<IntentExecutor>();
+        var ctx = new IntentContext(scope, new Registry(scope.ServiceProvider), cts);
 
-    private static async Task ExecuteAsync(IIntent intent, IntentContext ctx)
-    {
-        await using (ctx)
-        {
-            await ctx.Executor.ExecuteAsync(intent, ctx).ConfigureAwait(false);
-        }
-    }
-
-    private static async Task<TResult> ExecuteAndCastAsync<TResult>(IIntent<TResult> intent, IntentContext ctx)
-    {
-        await using (ctx)
-        {
-            var result = await ctx.Executor.ExecuteWithResultAsync(intent, ctx).ConfigureAwait(false);
-            return (TResult) result!;
-        }
+        return (ctx, executor, scope.ServiceProvider);
     }
 }

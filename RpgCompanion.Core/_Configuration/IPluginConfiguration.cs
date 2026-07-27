@@ -2,14 +2,14 @@
 
 public interface IPluginConfiguration
 {
-    public IPluginConfiguration WithName(string name);
-    public IPluginConfiguration WithVersion(string version);
-
-    public IPluginConfiguration WithInitialization(InitializationHandler handler);
-    public IPluginConfiguration WithInitialization(InitializationHandlerAsync handler);
-
-    public IPluginConfiguration AddIntent<TIntent>(IntentHandler<TIntent> handler) where TIntent : IIntent;
-    public IPluginConfiguration AddIntent<TIntent>(IntentHandlerAsync<TIntent> handler) where TIntent : IIntent;
-    public IPluginConfiguration AddIntent<TIntent, TResult>(IntentHandler<TIntent, TResult> handler) where TIntent : IIntent<TResult>;
-    public IPluginConfiguration AddIntent<TIntent, TResult>(IntentHandlerAsync<TIntent, TResult> handler) where TIntent : IIntent<TResult>;
+    void WithKey(PluginKey key);
+    void WithIdentifier(string identifier);
+    void WithName(string name);
+    void WithVersion(string version);
+    void WithInitialization<TInitialization>() where TInitialization : class, IInitialization;
+    void WithAsyncInitialization<TInitialization>() where TInitialization : class, IAsyncInitialization;
+    void AddIntent<TIntent>(Action<IIntentConfiguration<TIntent>> configure) where TIntent : IIntent;
+    void AddIntent<TIntent, TResult>(Action<IIntentConfiguration<TIntent, TResult>> configure) where TIntent : IIntent<TResult>;
+    void AddEvent<TEvent>(Action<IEventConfiguration<TEvent>> configure) where TEvent : Event;
+    void AddEntity<TEntity>(Action<IEntityConfiguration<TEntity>> configure) where TEntity : IEntity;
 }

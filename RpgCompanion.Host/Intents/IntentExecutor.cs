@@ -1,46 +1,65 @@
 namespace RpgCompanion.Core;
 
-internal abstract record IntentExecutor
+internal abstract class IntentExecutor
 {
-    // Used by Dispatch(IIntent)
-    internal virtual Task ExecuteAsync(IIntentBase intent, IIntentContextAsync context) =>
-        throw new InvalidOperationException("This executor does not support void intents.");
+    internal abstract Task<object?> Execute(
+        IServiceProvider serviceProvider,
+        IIntentBase intent,
+        IIntentContext context,
+        CancellationToken cancellationToken);
 
-    // Used by Dispatch<TResult>(IIntent<TResult>)
-    internal virtual Task<object?> ExecuteWithResultAsync(IIntentBase intent, IIntentContextAsync context) =>
-        throw new InvalidOperationException("This executor does not return a result.");
-
-    internal sealed record Sync<TIntent>(IntentHandler<TIntent> Handler) : IntentExecutor where TIntent : IIntent
+    internal sealed class Sync<TIntent> : IntentExecutor where TIntent : IIntent
     {
-        internal override Task ExecuteAsync(IIntentBase intent, IIntentContextAsync context)
+        internal override Task<object?> Execute(
+            IServiceProvider serviceProvider,
+            IIntentBase intent,
+            IIntentContext context,
+            CancellationToken cancellationToken)
         {
-            Handler((TIntent) intent, context);
-            return Task.CompletedTask;
+            var processor = serviceProvider.GetRequiredService<IIntentProcessor<TIntent>>();
+            processor.Process((TIntent) intent, context);
+            return Task.FromResult<object?>(null);
         }
     }
 
-    internal sealed record Async<TIntent>(IntentHandlerAsync<TIntent> Handler) : IntentExecutor where TIntent : IIntent
+    internal sealed class Async<TIntent> : IntentExecutor where TIntent : IIntent
     {
-        internal override Task ExecuteAsync(IIntentBase intent, IIntentContextAsync context)
+        internal override async Task<object?> Execute(
+            IServiceProvider serviceProvider,
+            IIntentBase intent,
+            IIntentContext context,
+            CancellationToken cancellationToken)
         {
-            return Handler((TIntent) intent, context);
+            var processor = serviceProvider.GetRequiredService<IAsyncIntentProcessor<TIntent>>();
+            await processor.Process((TIntent) intent, context, cancellationToken);
+            return null;
         }
     }
 
-    internal sealed record SyncResult<TIntent, TResult>(IntentHandler<TIntent, TResult> Handler) : IntentExecutor where TIntent : IIntent<TResult>
+    internal sealed class SyncResult<TIntent, TResult> : IntentExecutor where TIntent : IIntent<TResult>
     {
-        internal override Task<object?> ExecuteWithResultAsync(IIntentBase intent, IIntentContextAsync context)
+        internal override Task<object?> Execute(
+            IServiceProvider serviceProvider,
+            IIntentBase intent,
+            IIntentContext context,
+            CancellationToken cancellationToken)
         {
-            var result = Handler((TIntent) intent, context);
+            var processor = serviceProvider.GetRequiredService<IIntentProcessor<TIntent, TResult>>();
+            var result = processor.Process((TIntent) intent, context);
             return Task.FromResult<object?>(result);
         }
     }
 
-    internal sealed record AsyncResult<TIntent, TResult>(IntentHandlerAsync<TIntent, TResult> Handler) : IntentExecutor where TIntent : IIntent<TResult>
+    internal sealed class AsyncResult<TIntent, TResult> : IntentExecutor where TIntent : IIntent<TResult>
     {
-        internal override async Task<object?> ExecuteWithResultAsync(IIntentBase intent, IIntentContextAsync context)
+        internal override async Task<object?> Execute(
+            IServiceProvider serviceProvider,
+            IIntentBase intent,
+            IIntentContext context,
+            CancellationToken cancellationToken)
         {
-            var result = await Handler((TIntent) intent, context);
+            var processor = serviceProvider.GetRequiredService<IAsyncIntentProcessor<TIntent, TResult>>();
+            var result = await processor.Process((TIntent) intent, context, cancellationToken);
             return result;
         }
     }

@@ -7,7 +7,6 @@ public class AppSerializationProvider : IBsonSerializationProvider
 {
     public IBsonSerializer? GetSerializer(Type type)
     {
-        // Handle non-generic DatabaseId
         if (type == typeof(DatabaseId)) return new DatabaseIdSerializer();
 
         if (!type.IsGenericType) return null;

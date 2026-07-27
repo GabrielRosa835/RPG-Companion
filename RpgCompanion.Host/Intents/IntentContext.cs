@@ -1,12 +1,11 @@
 namespace RpgCompanion.Host.Intents;
 
-public class IntentContext(
+internal class IntentContext(
     IServiceScope _scope,
     IRegistry _registry,
     CancellationTokenSource _cancellationSource)
-    : IIntentContextAsync, IDisposable, IAsyncDisposable
+    : IIntentContext, IDisposable, IAsyncDisposable
 {
-    internal IntentExecutor Executor { get; set; } = default!;
     public IRegistry Registry => _registry;
     public CancellationToken CancellationToken => _cancellationSource.Token;
 

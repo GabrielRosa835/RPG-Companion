@@ -5,8 +5,9 @@ using Core;
 using Toolbox;
 
 internal class EventEngine(
-    IServiceScopeFactory _scopeFactory,
-    IEnvironmentAccessor _environmentAccessor)
+    EventArchives _eventArchives,
+    PluginArchives _pluginArchives,
+    EnvironmentAccessor _environmentAccessor)
     : IEventTrigger
 {
     private static readonly TimeSpan MinimumExecutionInterval = TimeSpan.FromMilliseconds(10);
@@ -14,49 +15,54 @@ internal class EventEngine(
 
     private readonly ConcurrentDictionary<Guid, EventExecutionContext> _activeContexts = new();
 
-    /// <summary>
-    /// Starts a new event pipeline and returns the pipeline's task
-    /// </summary>
-    public EventTask Raise(Event e, CancellationToken cancellationToken = default)
+    public async Task<EventResult> Raise(Event e, CancellationToken cancellationToken = default)
     {
-        var executionContext = CreateContext(e, cancellationToken);
-        executionContext.Task = new EventTask(RunPipelineAsync(executionContext));
-        return executionContext.Task;
-    }
-
-    private async Task<EventResult> RunPipelineAsync(EventExecutionContext ctx)
-    {
+        await using var executionContext = CreateContext(e, cancellationToken);
         try
         {
-            return await StartExecution(ctx);
+            return await StartExecution(executionContext);
         }
         finally
         {
-            _activeContexts.TryRemove(ctx.Id, out _);
-            ctx.Dispose();
+            _activeContexts.TryRemove(executionContext.Id, out _);
         }
     }
 
-    private EventExecutionContext CreateContext(Event first, CancellationToken ct)
+    private EventExecutionContext CreateContext(Event e, CancellationToken cancellationToken)
     {
-        var currentPluginKey = _environmentAccessor.CurrentPlugin?.Key;
-        var scope = _scopeFactory.CreateScope();
+        if (_environmentAccessor.CurrentPlugin is null)
+        {
+            var descriptor = _eventArchives[e.GetType()];
+            _environmentAccessor.CurrentPlugin = new PluginContext
+            {
+                Key = descriptor.PluginKey,
+            };
+        }
 
-        var factory = currentPluginKey.HasValue ? null : scope.ServiceProvider.GetKeyedService<IEventFactory>(currentPluginKey);
+        var pluginServices = _pluginArchives[_environmentAccessor.CurrentPlugin.Key].Services;
+        var scopeFactory = pluginServices.GetRequiredService<IServiceScopeFactory>();
+        var scope = scopeFactory.CreateAsyncScope();
+
+        var factory = scope.ServiceProvider.GetService<IEventFactory>();
         factory ??= scope.ServiceProvider.GetRequiredService<DefaultEventFactory>();
+
+        var cts = cancellationToken.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+            : new CancellationTokenSource();
 
         var executionContext = new EventExecutionContext
         {
             Engine = this,
-            Current = first,
+            Current = e,
             ServiceScope = scope,
-            CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(ct),
+            CancellationSource = cts,
             Factory = factory,
             Registry = new Registry(scope.ServiceProvider),
             Storage = new ConcurrentDynamicStorage(),
         };
 
-        _activeContexts.TryAdd(executionContext.Id, executionContext);
+        _activeContexts[executionContext.Id] = executionContext;
+
         return executionContext;
     }
 

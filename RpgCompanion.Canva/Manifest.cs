@@ -9,15 +9,18 @@ public class Manifest : IManifest
         Log.Debug("Configuring RpgCompanion.Canvas");
         plugin.WithName("Canva");
         plugin.WithVersion("1.0.0");
-        plugin.AddIntent<Intent>(Intent.Handle);
-        plugin.WithInitialization(Initialization.Handle);
+        plugin.AddIntent<Intent>(i =>
+        {
+            i.WithProcessor<Intent>();
+        });
+        plugin.WithAsyncInitialization<Initialization>();
         Log.Debug("Finished Configuring RpgCompanion.Canvas");
     }
 }
 
-public class Initialization : IInitializationHandlerAsyncTemplate
+public class Initialization : IAsyncInitialization
 {
-    public static async Task Handle(IInitializationContextAsync context)
+    public async Task Initialize(IInitializationContext context, CancellationToken cancellationToken)
     {
         Log.Debug("Initializing RpgCompanion.Canvas");
         var trigger = context.Registry.Get<IEventTrigger>();

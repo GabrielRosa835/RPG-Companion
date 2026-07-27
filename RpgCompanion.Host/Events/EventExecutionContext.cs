@@ -2,7 +2,7 @@ namespace RpgCompanion.Host.Events;
 
 using Toolbox;
 
-internal class EventExecutionContext : IEventContext, IDisposable
+internal class EventExecutionContext : IEventContext, IDisposable, IAsyncDisposable
 {
     internal readonly object Lock = new();
 
@@ -23,7 +23,7 @@ internal class EventExecutionContext : IEventContext, IDisposable
     internal EventResult? Result { get; set; }
     internal bool Exiting => Result is not null;
 
-    public EventTask Raise(Event e, CancellationToken cancellationToken = default) => Engine.Raise(e, cancellationToken);
+    public Task<EventResult> Raise(Event e, CancellationToken cancellationToken = default) => Engine.Raise(e, cancellationToken);
 
     public void Halt(bool throwException = false)
     {
@@ -45,5 +45,23 @@ internal class EventExecutionContext : IEventContext, IDisposable
     {
         ServiceScope.Dispose();
         CancellationSource.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await CastAndDispose(CancellationSource);
+        await CastAndDispose(ServiceScope);
+    }
+
+    static async ValueTask CastAndDispose(IDisposable resource)
+    {
+        if (resource is IAsyncDisposable resourceAsyncDisposable)
+        {
+            await resourceAsyncDisposable.DisposeAsync();
+        }
+        else
+        {
+            resource.Dispose();
+        }
     }
 }

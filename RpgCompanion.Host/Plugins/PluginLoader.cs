@@ -2,65 +2,81 @@ namespace RpgCompanion.Host;
 
 using System.Runtime.Loader;
 using Configuration;
+using Events;
+using Intents;
 using MongoDB.Bson.Serialization;
 
-public class PluginLoader
+internal class PluginLoader(
+    IServiceProvider _hostServices,
+    PluginArchives _pluginArchives,
+    EventArchives _eventArchives,
+    IntentArchives _intentArchives,
+    EntityArchives _entityArchives)
 {
-    private readonly IServiceCollection _services;
-    private readonly string _sourcesFolder;
-
-    public PluginLoader(IServiceCollection services, string sourcesFolder)
+    internal async Task<List<ILoadResult>> LoadMany(IEnumerable<PluginMetadata> plugins, CancellationToken cancellationToken = default)
     {
-        if (!Directory.Exists(sourcesFolder))
-        {
-            throw new DirectoryNotFoundException(sourcesFolder);
-        }
-        _services = services;
-        _sourcesFolder = sourcesFolder;
+        var loadTasks = plugins.Select(p => LoadSingle(p, cancellationToken)).ToList();
+        await Task.WhenAll(loadTasks);
+        return loadTasks.Select(t => t.Result).ToList();
     }
 
-    internal async Task<List<PluginMetadata>> LoadAll()
+    internal Task<ILoadResult> LoadSingle(PluginMetadata metadata, CancellationToken cancellationToken = default) => Task.Run(() =>
     {
-        var plugins = new List<PluginMetadata>();
-
-        foreach (var file in Directory.GetFiles(_sourcesFolder, "*.dll", SearchOption.AllDirectories))
+        try
         {
-            var fileName = Path.GetFileNameWithoutExtension(file);
-            if (plugins.Any(p => p.Resource != fileName))
+            var context = new AssemblyLoadContext(metadata.Resource, isCollectible: true);
+            var assembly = context.LoadFromAssemblyPath(metadata.FilePath);
+
+            var manifestType = assembly.GetTypes().Process();
+
+            if (manifestType is null || Activator.CreateInstance(manifestType) is not IManifest manifest)
             {
-                continue;
+                return LoadResult.Faulted(new InvalidOperationException($"Could not find manifest for plugin {metadata.Resource}"));
             }
-            plugins.Add(new PluginMetadata(file));
+
+            IServiceCollection services = new ServiceCollection();
+
+            services.AddHostServices(_hostServices);
+
+            var configuration = new PluginConfiguration(services,
+                _eventArchives,
+                _intentArchives,
+                _entityArchives);
+
+            manifest.Configure(configuration);
+
+            metadata.Descriptor = configuration.Build();
+            metadata.Services = services.BuildServiceProvider();
+            metadata.Assembly = assembly;
+            metadata.Loaded = true;
+
+            _pluginArchives.Add(metadata);
+
+            return LoadResult.Completed(metadata);
         }
+        catch (Exception e)
+        {
+            return LoadResult.Faulted(e);
+        }
+    },
+    cancellationToken);
+}
 
-        var loadPluginsTasks = plugins.Select(LoadSingle).ToArray();
-
-        await Task.WhenAll(loadPluginsTasks);
-
-        return loadPluginsTasks.Select(t => t.Result).ToList();
+file static class Extensions
+{
+    internal static bool Implements(this Type type, Type interfaceType)
+    {
+        return !(type.IsInterface || type.IsAbstract) && type.GetInterfaces().Contains(interfaceType);
     }
 
-    private Task<PluginMetadata> LoadSingle(PluginMetadata metadata) => Task.Run(() =>
+    internal static void AddHostServices(this IServiceCollection services, IServiceProvider hostServices)
     {
-        var context = new AssemblyLoadContext(metadata.Resource, isCollectible: true);
-        var assembly = context.LoadFromAssemblyPath(metadata.FilePath);
+        services.AddTransient<IEventTrigger>(_ => hostServices.GetRequiredService<EventEngine>());
+        services.AddTransient<IEnvironmentAccessor>(_ => hostServices.GetRequiredService<EnvironmentAccessor>());
+        services.AddTransient<IIntentDispatcher>(_ => hostServices.GetRequiredService<IntentDispatcher>());
+    }
 
-        var (manifestType, _) = ProcessAssemblyTypes(assembly.GetTypes());
-
-        if (manifestType is null || Activator.CreateInstance(manifestType) is not IManifest manifest)
-        {
-            throw new InvalidOperationException($"Could not find manifest for plugin {metadata.Resource}");
-        }
-
-        var configuration = new PluginConfiguration(_services, metadata);
-        manifest.Configure(configuration);
-        metadata.Descriptor = configuration.Build();
-        metadata.Assembly = assembly;
-        metadata.Activated = true;
-        return metadata;
-    });
-
-    private (Type? ManifestType, bool unused) ProcessAssemblyTypes(IEnumerable<Type> types)
+    internal static Type? Process(this IEnumerable<Type> types)
     {
         Type? manifestType = null;
 
@@ -93,14 +109,6 @@ public class PluginLoader
             }
         }
 
-        return (manifestType, true);
-    }
-}
-
-file static class SelfUtils
-{
-    public static bool Implements(this Type type, Type interfaceType)
-    {
-        return !(type.IsInterface || type.IsAbstract) && type.GetInterfaces().Contains(interfaceType);
+        return manifestType;
     }
 }

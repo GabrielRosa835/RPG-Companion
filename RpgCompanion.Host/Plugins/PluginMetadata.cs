@@ -1,19 +1,18 @@
 namespace RpgCompanion.Host;
 
 using System.Reflection;
-using Configuration;
 
 internal class PluginMetadata
 {
     internal string FilePath { get; init; }
     internal string Resource { get; init; }
 
-    internal bool Activated { get; set; }
+    internal bool Loaded { get; set; }
     internal Assembly Assembly { get; set; } = default!;
 
     internal bool Initialized { get; set; }
-    internal InitializationExecutor? Initialization { get; set; }
     internal PluginDescriptor Descriptor { get; set; } = default!;
+    internal IServiceProvider Services { get; set; } = default!;
 
     public PluginMetadata(string filePath)
     {

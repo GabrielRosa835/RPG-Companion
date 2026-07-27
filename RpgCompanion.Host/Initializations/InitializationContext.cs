@@ -2,12 +2,11 @@ namespace RpgCompanion.Host.Configuration;
 
 internal class InitializationContext(
     IServiceScope _scope,
-    CancellationTokenSource _cancellationSource)
-    : IInitializationContextAsync, IDisposable, IAsyncDisposable
+    CancellationTokenSource _cancellationSource,
+    IRegistry _registry)
+    : IInitializationContext, IDisposable, IAsyncDisposable
 {
-    public IRegistry Registry { get; } = new Registry(_scope.ServiceProvider);
-    public CancellationToken CancellationToken => _cancellationSource.Token;
-    public InitializationExecutor Executor { get; set; }
+    public IRegistry Registry => _registry;
 
     public void Dispose()
     {
