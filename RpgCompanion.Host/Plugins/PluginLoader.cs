@@ -1,9 +1,9 @@
 namespace RpgCompanion.Host;
 
+using System.Reflection;
 using System.Runtime.Loader;
 using Configuration;
-using Events;
-using Intents;
+using HostExclusive;
 using MongoDB.Bson.Serialization;
 
 internal class PluginLoader(
@@ -27,7 +27,7 @@ internal class PluginLoader(
             var context = new AssemblyLoadContext(metadata.Resource, isCollectible: true);
             var assembly = context.LoadFromAssemblyPath(metadata.FilePath);
 
-            var manifestType = assembly.GetTypes().Process();
+            var manifestType = ProcessAssembly(assembly);
 
             if (manifestType is null || Activator.CreateInstance(manifestType) is not IManifest manifest)
             {
@@ -36,14 +36,17 @@ internal class PluginLoader(
 
             IServiceCollection services = new ServiceCollection();
 
-            services.AddHostServices(_hostServices);
+            services.AddPluginServices(_hostServices);
 
             var configuration = new PluginConfiguration(services,
                 _eventArchives,
                 _intentArchives,
                 _entityArchives);
 
-            manifest.Configure(configuration);
+            var hostRegistry = new HostRegistry(_hostServices, _pluginArchives);
+            var hostContext = new HostContext(hostRegistry);
+
+            manifest.Configure(configuration, hostContext);
 
             metadata.Descriptor = configuration.Build();
             metadata.Services = services.BuildServiceProvider();
@@ -60,6 +63,42 @@ internal class PluginLoader(
         }
     },
     cancellationToken);
+
+    internal Type? ProcessAssembly(Assembly assembly)
+    {
+        Type? manifestType = null;
+
+        foreach (var type in assembly.GetTypes())
+        {
+            if (type.Implements(typeof(IManifest)))
+            {
+                manifestType = type;
+                continue;
+            }
+            // if (type.Implements(typeof(IEntity)))
+            // {
+            //     var cm = new BsonClassMap(type);
+            //     cm.AutoMap();
+            //     cm.MapIdProperty(nameof(IEntity.DbId));
+            //     BsonClassMap.RegisterClassMap(cm);
+            //
+            //     var subtypeAttributes = type
+            //         .GetCustomAttributes(typeof(HasSubtypeAttribute), false)
+            //         .OfType<HasSubtypeAttribute>()
+            //         .ToList();
+            //
+            //     if (subtypeAttributes.Count > 0)
+            //     {
+            //         foreach (var attr in subtypeAttributes)
+            //         {
+            //             cm.AddKnownType(attr.KnownType);
+            //         }
+            //     }
+            // }
+        }
+
+        return manifestType;
+    }
 }
 
 file static class Extensions
@@ -67,48 +106,5 @@ file static class Extensions
     internal static bool Implements(this Type type, Type interfaceType)
     {
         return !(type.IsInterface || type.IsAbstract) && type.GetInterfaces().Contains(interfaceType);
-    }
-
-    internal static void AddHostServices(this IServiceCollection services, IServiceProvider hostServices)
-    {
-        services.AddTransient<IEventTrigger>(_ => hostServices.GetRequiredService<EventEngine>());
-        services.AddTransient<IEnvironmentAccessor>(_ => hostServices.GetRequiredService<EnvironmentAccessor>());
-        services.AddTransient<IIntentDispatcher>(_ => hostServices.GetRequiredService<IntentDispatcher>());
-    }
-
-    internal static Type? Process(this IEnumerable<Type> types)
-    {
-        Type? manifestType = null;
-
-        foreach (var type in types)
-        {
-            if (type.Implements(typeof(IManifest)))
-            {
-                manifestType = type;
-                continue;
-            }
-            if (type.Implements(typeof(IEntity)))
-            {
-                var cm = new BsonClassMap(type);
-                cm.AutoMap();
-                cm.MapIdProperty(nameof(IEntity.DbId));
-                BsonClassMap.RegisterClassMap(cm);
-
-                var subtypeAttributes = type
-                    .GetCustomAttributes(typeof(HasSubtypeAttribute), false)
-                    .OfType<HasSubtypeAttribute>()
-                    .ToList();
-
-                if (subtypeAttributes.Count > 0)
-                {
-                    foreach (var attr in subtypeAttributes)
-                    {
-                        cm.AddKnownType(attr.KnownType);
-                    }
-                }
-            }
-        }
-
-        return manifestType;
     }
 }

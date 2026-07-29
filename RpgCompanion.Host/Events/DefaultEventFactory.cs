@@ -1,6 +1,6 @@
 namespace RpgCompanion.Host.Events;
 
-public class DefaultEventFactory(IServiceProvider _serviceProvider) : IEventFactory
+internal class DefaultEventFactory(IServiceProvider _serviceProvider) : IEventFactory
 {
     public TEvent Create<TEvent>() where TEvent : Event
     {

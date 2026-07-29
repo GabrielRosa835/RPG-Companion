@@ -1,12 +1,16 @@
 namespace RpgCompanion.Host.Configuration;
 
+using HostExclusive;
+
 internal class InitializationContext(
     IServiceScope _scope,
-    CancellationTokenSource _cancellationSource,
-    IRegistry _registry)
+    HostContext _hostContext,
+    Registry _registry,
+    CancellationTokenSource _cancellationSource)
     : IInitializationContext, IDisposable, IAsyncDisposable
 {
     public IRegistry Registry => _registry;
+    public IHostContext Host => _hostContext;
 
     public void Dispose()
     {

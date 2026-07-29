@@ -1,5 +1,7 @@
 namespace RpgCompanion.Host.Configuration;
 
+using Toolbox;
+
 internal class PluginConfiguration(
     IServiceCollection _services,
     EventArchives _eventArchives,
@@ -8,7 +10,7 @@ internal class PluginConfiguration(
     : IPluginConfiguration
 {
     internal PluginKey _key = new(Guid.CreateVersion7().ToString());
-    internal string? _identifier;
+    internal Maybe<string?> _identifier;
     internal string? _name;
     internal string? _version;
     internal Action? _initializationRegistration;
@@ -97,7 +99,7 @@ internal class PluginConfiguration(
         };
     }
 
-    public void AddEvent<TEvent>(Action<IEventConfiguration<TEvent>> configure) where TEvent : Event
+    public void AddEvent<TEvent>(Action<IEventConfiguration<TEvent>>? configure) where TEvent : Event
     {
         _eventRegistrations[typeof(TEvent)] = () =>
         {
@@ -105,12 +107,12 @@ internal class PluginConfiguration(
                 _key,
                 _eventArchives,
                 _services);
-            configure(configuration);
+            configure?.Invoke(configuration);
             configuration.Commit();
         };
     }
 
-    public void AddEntity<TEntity>(Action<IEntityConfiguration<TEntity>> configure) where TEntity : IEntity
+    public void AddEntity<TEntity>(Action<IEntityConfiguration<TEntity>>? configure) where TEntity : IEntity
     {
         _entityRegistrations[typeof(TEntity)] = () =>
         {
@@ -118,17 +120,33 @@ internal class PluginConfiguration(
                 _key,
                 _entityArchives,
                 _services);
-            configure(configuration);
+            configure?.Invoke(configuration);
             configuration.Commit();
         };
     }
 
-    private static string VerifyIdentifier(string? identifier)
+    private static string VerifyIdentifier(Maybe<string?> identifier)
     {
-        if (identifier is null) throw new InvalidOperationException("Identifier cannot be null");
-        identifier = identifier.Trim();
-        if (string.IsNullOrWhiteSpace(identifier)) throw new FormatException("Identifier cannot be empty");
-        if (identifier.Contains(" ")) throw new FormatException("Identifier cannot have spaces");
-        return identifier;
+        if (!identifier.TryGetValue(out var identifierValue))
+        {
+            throw new InvalidOperationException("Identifier must be specified");
+        }
+        if (identifierValue is null)
+        {
+            throw new InvalidOperationException("Identifier cannot be null");
+        }
+
+        identifierValue = identifierValue.Trim();
+
+        if (string.IsNullOrWhiteSpace(identifierValue))
+        {
+            throw new FormatException("Identifier cannot be empty");
+        }
+        if (identifierValue.Contains(" "))
+        {
+            throw new FormatException("Identifier cannot have spaces");
+        }
+
+        return identifierValue;
     }
 }

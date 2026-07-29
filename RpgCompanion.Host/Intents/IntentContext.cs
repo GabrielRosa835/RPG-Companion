@@ -1,12 +1,16 @@
 namespace RpgCompanion.Host.Intents;
 
+using HostExclusive;
+
 internal class IntentContext(
     IServiceScope _scope,
-    IRegistry _registry,
+    Registry _registry,
+    HostContext _hostContext,
     CancellationTokenSource _cancellationSource)
     : IIntentContext, IDisposable, IAsyncDisposable
 {
     public IRegistry Registry => _registry;
+    public IHostContext Host => _hostContext;
     public CancellationToken CancellationToken => _cancellationSource.Token;
 
     public void Dispose()

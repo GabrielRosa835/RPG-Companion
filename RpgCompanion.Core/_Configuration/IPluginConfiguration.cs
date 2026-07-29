@@ -10,6 +10,6 @@ public interface IPluginConfiguration
     void WithAsyncInitialization<TInitialization>() where TInitialization : class, IAsyncInitialization;
     void AddIntent<TIntent>(Action<IIntentConfiguration<TIntent>> configure) where TIntent : IIntent;
     void AddIntent<TIntent, TResult>(Action<IIntentConfiguration<TIntent, TResult>> configure) where TIntent : IIntent<TResult>;
-    void AddEvent<TEvent>(Action<IEventConfiguration<TEvent>> configure) where TEvent : Event;
-    void AddEntity<TEntity>(Action<IEntityConfiguration<TEntity>> configure) where TEntity : IEntity;
+    void AddEvent<TEvent>(Action<IEventConfiguration<TEvent>>? configure = null) where TEvent : Event;
+    void AddEntity<TEntity>(Action<IEntityConfiguration<TEntity>>? configure = null) where TEntity : IEntity;
 }

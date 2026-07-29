@@ -11,6 +11,7 @@ internal class EventExecutionContext : IEventContext, IDisposable, IAsyncDisposa
     internal required IServiceScope ServiceScope { get; init; }
     internal required IEventFactory Factory { get; init; }
     public required IRegistry Registry { get; init; }
+    public required IHostContext Host { get; init; }
     public required IStorage Storage { get; init; }
 
     public CancellationToken CancellationToken => CancellationSource.Token;

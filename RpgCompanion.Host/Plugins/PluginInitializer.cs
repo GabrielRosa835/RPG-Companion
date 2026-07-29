@@ -1,6 +1,7 @@
 namespace RpgCompanion.Host;
 
 using Configuration;
+using HostExclusive;
 
 internal class PluginInitializer
 {
@@ -15,12 +16,10 @@ internal class PluginInitializer
     {
         if (!metadata.Loaded)
         {
-            return InitializationResult.Faulted(new InvalidOperationException("Plugin metadata is not loaded"));
+            return InitializationResult.Faulted(new InvalidOperationException("Plugin is not loaded yet"));
         }
         try
         {
-            Console.WriteLine($"Initializing plugin {metadata.Resource}");
-
             IAsyncInitialization? asyncInitialization = metadata.Services.GetService<IAsyncInitialization>();
             IInitialization? syncInitialization = default!;
 
@@ -39,20 +38,22 @@ internal class PluginInitializer
                 ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
                 : new CancellationTokenSource();
 
-            IInitializationResult result = InitializationResult.None;
+            var registry = new Registry(scope.ServiceProvider);
+            var hostContext = scope.ServiceProvider.GetRequiredService<HostContext>();
+            await using var context = new InitializationContext(scope, hostContext, registry, cts);
 
-            await using var context = new InitializationContext(scope, cts, new Registry(scope.ServiceProvider));
+            IInitializationResult result = InitializationResult.None;
 
             if (asyncInitialization is not null)
             {
                 await asyncInitialization.Initialize(context, cancellationToken);
-                result = InitializationResult.Completed(true);
+                result = InitializationResult.Completed(metadata, true);
                 metadata.Initialized = true;
             }
             else if (syncInitialization is not null)
             {
                 syncInitialization!.Initialize(context);
-                result = InitializationResult.Completed(true);
+                result = InitializationResult.Completed(metadata, true);
                 metadata.Initialized = true;
             }
 

@@ -11,5 +11,5 @@ internal interface ILoadResult
 {
     internal readonly record struct None : ILoadResult;
     internal readonly record struct Completed(PluginMetadata Metadata) : ILoadResult;
-    internal readonly record struct Faulted(Exception e) : ILoadResult;
+    internal readonly record struct Faulted(Exception Exception) : ILoadResult;
 }

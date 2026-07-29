@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using RpgCompanion.Host;
 using RpgCompanion.Host.Database;
 using RpgCompanion.Host.Events;
+using RpgCompanion.Host.HostExclusive;
 using RpgCompanion.Host.Intents;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -22,6 +23,9 @@ builder.Services.AddSingleton<IntentDispatcher>();
 builder.Services.AddSingleton<DefaultEventFactory>();
 builder.Services.AddSingleton<IEnvironmentAccessor>(sp => sp.GetRequiredService<EnvironmentAccessor>());
 
+builder.Services.AddTransient<HostContext>();
+builder.Services.AddTransient<HostRegistry>();
+
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
@@ -35,6 +39,16 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
     return client.GetDatabase(config["Persistence:DatabaseName"]);
 });
 
+builder.Services.AddScoped<MongoDatabase>();
+builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<MongoDatabase>());
+
+builder.Services.AddLogging(log =>
+{
+    log.AddConsole();
+    log.SetMinimumLevel(LogLevel.Trace);
+    log.AddDebug();
+});
+
 // 1. Register your custom serializers for Id and Rel
 BsonSerializer.RegisterSerializationProvider(new AppSerializationProvider());
 
@@ -46,11 +60,37 @@ var pluginManager = host.Services.GetRequiredService<PluginManager>();
 var pluginLoader = host.Services.GetRequiredService<PluginLoader>();
 var pluginInitializer = host.Services.GetRequiredService<PluginInitializer>();
 var configuration = host.Services.GetRequiredService<IConfiguration>();
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 var plugins = await pluginManager.FindPlugins(configuration[ConfigKeys.PluginsFolder]!);
 var loadResults = await pluginLoader.LoadMany(plugins);
-var loaded = loadResults.Where(r => r is ILoadResult.Completed).Select(r => ((ILoadResult.Completed) r).Metadata);
-var initializationResults = await pluginInitializer.InitializeMany(plugins);
+
+var loaded = new List<PluginMetadata>();
+foreach (var loadResult in loadResults)
+{
+    if (loadResult is ILoadResult.Faulted faulted)
+    {
+        logger.LogError(faulted.Exception, "An exception occurred");
+    }
+    else if (loadResult is ILoadResult.Completed completed)
+    {
+        logger.LogInformation("Plugin {0} successfully loaded", completed.Metadata.Resource);
+        loaded.Add(completed.Metadata);
+    }
+}
+
+var initializationResults = await pluginInitializer.InitializeMany(loaded);
+foreach (var initializationResult in initializationResults)
+{
+    if (initializationResult is IInitializationResult.Faulted faulted)
+    {
+        logger.LogError(faulted.Exception, "An exception occurred");
+    }
+    else if (initializationResult is IInitializationResult.Completed completed)
+    {
+        logger.LogInformation("Plugin {0} successfully initialized", completed.Metadata.Resource);
+    }
+}
 
 await host.WaitForShutdownAsync();
 

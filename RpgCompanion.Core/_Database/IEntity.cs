@@ -8,5 +8,5 @@ public interface IEntity
 public interface IEntity<TSelf> : IEntity where TSelf : class, IEntity<TSelf>
 {
     public new DatabaseId<TSelf> DbId { get; }
-    DatabaseId IEntity.DbId => this.DbId;
+    DatabaseId IEntity.DbId => new(this.DbId.Value);
 }

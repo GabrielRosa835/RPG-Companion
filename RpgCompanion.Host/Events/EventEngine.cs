@@ -46,6 +46,8 @@ internal class EventEngine(
         var factory = scope.ServiceProvider.GetService<IEventFactory>();
         factory ??= scope.ServiceProvider.GetRequiredService<DefaultEventFactory>();
 
+        var hostContext = scope.ServiceProvider.GetRequiredService<IHostContext>();
+
         var cts = cancellationToken.CanBeCanceled
             ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
             : new CancellationTokenSource();
@@ -57,6 +59,7 @@ internal class EventEngine(
             ServiceScope = scope,
             CancellationSource = cts,
             Factory = factory,
+            Host = hostContext,
             Registry = new Registry(scope.ServiceProvider),
             Storage = new ConcurrentDynamicStorage(),
         };
@@ -78,7 +81,9 @@ internal class EventEngine(
                 {
                     await ctx.Current.Setup(ctx, ct);
                 }
-                catch (OperationCanceledException) {}
+                catch (OperationCanceledException)
+                {
+                }
 
                 TimeSpan interval = FallbackExecutionInterval;
                 if (ctx.Current.ExecutionInterval.HasValue)
@@ -98,17 +103,23 @@ internal class EventEngine(
                         {
                             await Task.Delay(interval, ct);
                         }
-                        catch (OperationCanceledException) {}
+                        catch (OperationCanceledException)
+                        {
+                        }
                     }
                 }
-                catch (OperationCanceledException) {}
+                catch (OperationCanceledException)
+                {
+                }
 
                 try
                 {
                     var safeToken = ct.IsCancellationRequested ? CancellationToken.None : ct;
                     await ctx.Current.Teardown(ctx, safeToken);
                 }
-                catch (OperationCanceledException) {}
+                catch (OperationCanceledException)
+                {
+                }
 
                 if (ctx.Continuing)
                 {

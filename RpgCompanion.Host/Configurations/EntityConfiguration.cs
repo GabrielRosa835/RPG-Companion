@@ -24,10 +24,23 @@ internal class EntityConfiguration<TEntity>(
             Name = _name,
         };
         _services.AddKeyedSingleton(_key, descriptor);
+
+        if (!BsonClassMap.IsClassMapRegistered(typeof(TEntity)))
+        {
+            var classMap = new BsonClassMap(typeof(TEntity));
+            classMap.AutoMap();
+            if (typeof(TEntity).IsAssignableTo(typeof(IEntity<>).MakeGenericType(typeof(TEntity))))
+            {
+                classMap.Map
+            }
+            BsonClassMap.RegisterClassMap(classMap);
+        }
+
         foreach (Action registration in _subtypeRegistrations.Values)
         {
             registration();
         }
+
         _entityArchives.Add(descriptor);
     }
 

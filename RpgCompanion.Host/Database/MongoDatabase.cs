@@ -18,19 +18,35 @@ public class MongoDatabase(
         return new MongoQuery<T>(this, GetCollection<T>());
     }
 
-    public async Task SaveAsync<T>(T entity) where T : class, IEntity
+    public void Save<T>(T entity) where T : class, IEntity
     {
         var collection = GetCollection<T>();
 
         // Assuming DbId maps down to a string "_id" via MongoDB conventions/serializers
         var filter = Builders<T>.Filter.Eq(e => e.DbId, entity.DbId);
-        await collection.ReplaceOneAsync(filter, entity, new ReplaceOptions { IsUpsert = true });
+        collection.ReplaceOne(filter, entity, new ReplaceOptions { IsUpsert = true });
     }
 
-    public async Task<T?> GetAsync<T>(DatabaseId<T> id) where T : class, IEntity
+    public Task SaveAsync<T>(T entity, CancellationToken cancellationToken) where T : class, IEntity
+    {
+        var collection = GetCollection<T>();
+
+        // Assuming DbId maps down to a string "_id" via MongoDB conventions/serializers
+        var filter = Builders<T>.Filter.Eq(e => e.DbId, entity.DbId);
+        return collection.ReplaceOneAsync(filter, entity, new ReplaceOptions { IsUpsert = true }, cancellationToken);
+    }
+
+    public T? Get<T>(DatabaseId<T> id) where T : class, IEntity
     {
         var collection = GetCollection<T>();
         var filter = Builders<T>.Filter.Eq<DatabaseId>(e => e.DbId, id);
-        return await collection.Find(filter).FirstOrDefaultAsync();
+        return collection.Find(filter).FirstOrDefault();
+    }
+
+    public Task<T?> GetAsync<T>(DatabaseId<T> id, CancellationToken cancellationToken) where T : class, IEntity
+    {
+        var collection = GetCollection<T>();
+        var filter = Builders<T>.Filter.Eq<DatabaseId>(e => e.DbId, id);
+        return collection.Find(filter).FirstOrDefaultAsync(cancellationToken)!;
     }
 }

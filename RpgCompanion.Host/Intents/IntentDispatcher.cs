@@ -1,5 +1,7 @@
 namespace RpgCompanion.Host.Intents;
 
+using HostExclusive;
+
 internal class IntentDispatcher(
     PluginArchives _pluginArchives,
     IntentArchives _intentArchives,
@@ -25,16 +27,15 @@ internal class IntentDispatcher(
         }
     }
 
-    private (IntentContext Context, IntentExecutor Executor, IServiceProvider Services) CreateContext(IIntentBase intent, CancellationToken cancellationToken)
+    private (IntentContext Context, IntentExecutor Executor, IServiceProvider Services)
+        CreateContext(IIntentBase intent, CancellationToken cancellationToken)
     {
-        if (_environmentAccessor.CurrentPlugin is null)
+        var descriptor = _intentArchives[intent.GetType()];
+
+        _environmentAccessor.CurrentPlugin ??= new PluginContext
         {
-            var descriptor = _intentArchives[intent.GetType()];
-            _environmentAccessor.CurrentPlugin = new PluginContext
-            {
-                Key = descriptor.PluginKey,
-            };
-        }
+            Key = descriptor.PluginKey,
+        };
 
         var pluginServices = _pluginArchives[_environmentAccessor.CurrentPlugin.Key].Services;
         var scopeFactory = pluginServices.GetRequiredService<IServiceScopeFactory>();
@@ -44,8 +45,10 @@ internal class IntentDispatcher(
             ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
             : new CancellationTokenSource();
 
-        var executor = scope.ServiceProvider.GetRequiredService<IntentExecutor>();
-        var ctx = new IntentContext(scope, new Registry(scope.ServiceProvider), cts);
+        var executor = scope.ServiceProvider.GetRequiredKeyedService<IntentExecutor>(descriptor.Key);
+        var hostContext = scope.ServiceProvider.GetRequiredService<HostContext>();
+        var registry = new Registry(scope.ServiceProvider);
+        var ctx = new IntentContext(scope, registry, hostContext, cts);
 
         return (ctx, executor, scope.ServiceProvider);
     }
