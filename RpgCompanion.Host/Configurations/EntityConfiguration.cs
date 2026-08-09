@@ -29,10 +29,11 @@ internal class EntityConfiguration<TEntity>(
         {
             var classMap = new BsonClassMap(typeof(TEntity));
             classMap.AutoMap();
-            if (typeof(TEntity).IsAssignableTo(typeof(IEntity<>).MakeGenericType(typeof(TEntity))))
-            {
-                classMap.Map
-            }
+            classMap.MapIdProperty(nameof(IEntity.DbId));
+            // if (typeof(TEntity).IsAssignableTo(typeof(IEntity<>).MakeGenericType(typeof(TEntity))))
+            // {
+            //     classMap.Map
+            // }
             BsonClassMap.RegisterClassMap(classMap);
         }
 

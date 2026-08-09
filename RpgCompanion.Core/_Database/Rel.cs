@@ -2,12 +2,13 @@ namespace RpgCompanion.Core;
 
 public static class Rel
 {
-    public static Rel<T>.None None<T>() where T : class, IEntity => new();
-    public static Rel<T>.Loaded Loaded<T>(T entity) where T : class, IEntity => new(entity);
-    public static Rel<T>.Unloaded Unloaded<T>(DatabaseId<T> dbId) where T : class, IEntity => new(dbId);
+    public static Rel<T>.None None<T>() where T : IEntity => new();
+    public static Rel<T>.Loaded Loaded<T>(T entity) where T : IEntity => new(entity);
+    public static Rel<T>.Unloaded Unloaded<T>(DatabaseId<T> dbId) where T : IEntity => new(dbId);
+    public static Rel<T>.Unloaded Unloaded<T>(DatabaseId dbId) where T : IEntity => new(dbId.For<T>());
 }
 
-public abstract record Rel<T> where T : class, IEntity
+public abstract record Rel<T> where T : IEntity
 {
     public sealed record None : Rel<T>;
 

@@ -1,20 +1,25 @@
 namespace RpgCompanion.Core;
 
-public readonly record struct DatabaseId
+public record DatabaseId
 {
-    public string Value { get; }
-    public DatabaseId() => Value = Guid.CreateVersion7().ToString("N");
-    public DatabaseId(string value) => Value = value;
+    public string Value { get; internal init; }
+    internal DatabaseId(string value) => Value = value;
+    internal DatabaseId() : this(Guid.CreateVersion7().ToString("N"))
+    {
+    }
 
-    public DatabaseId<TFor> For<TFor>() where TFor : class, IEntity<TFor> => new(Value);
+    public DatabaseId<TFor> For<TFor>() where TFor : IEntity => new(Value);
+
+    public static DatabaseId Create() => new();
+    public static DatabaseId Create(string value) => new(value);
+    public static DatabaseId<TFor> Create<TFor>() where TFor : IEntity => new();
+    public static DatabaseId<TFor> Create<TFor>(string value) where TFor : IEntity => new(value);
 }
 
-public readonly record struct DatabaseId<TFor> where TFor : class, IEntity
+public record DatabaseId<TFor> : DatabaseId where TFor : IEntity
 {
-    public string Value { get; }
-    public DatabaseId() => Value = Guid.CreateVersion7().ToString("N");
-    public DatabaseId(string value) => Value = value;
-
-    public static implicit operator DatabaseId(DatabaseId<TFor> typed) => new(typed.Value);
-    public static implicit operator DatabaseId<TFor>(DatabaseId untyped) => new(untyped.Value);
+    internal DatabaseId(string value) : base(value) { }
+    internal DatabaseId() : base(Guid.CreateVersion7().ToString("N"))
+    {
+    }
 }

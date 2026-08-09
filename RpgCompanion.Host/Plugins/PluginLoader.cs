@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Configuration;
 using HostExclusive;
-using MongoDB.Bson.Serialization;
 
 internal class PluginLoader(
     IServiceProvider _hostServices,

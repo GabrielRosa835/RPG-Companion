@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging;
 
 public static class PersistenceTest
 {
+    private static readonly Guid EntityFixedGuid = Guid.ParseExact("019fb072d48c77ebbb1f238d328577cd", "N");
+    private static readonly Guid OtherFixedGuid = Guid.ParseExact("019fb072d48d762e832ead1bf9037ab4", "N");
+
     public static async Task Run(IDatabase db, ILogger<Initialization> logger, CancellationToken cancellationToken)
     {
         try
@@ -13,10 +16,10 @@ public static class PersistenceTest
 
             var entity = new Entity
             {
-                DbId = new DatabaseId<Entity>(),
+                Id = DatabaseId.Create<Entity>(EntityFixedGuid),
                 NumberValue = 10,
                 TextValue = "Entity",
-                ComplexValue = new ComplexValue()
+                ComplexValue = new ComplexValue
                 {
                     NumberValue = 20,
                     TextValue = "Complex Value",
@@ -24,7 +27,7 @@ public static class PersistenceTest
             };
             var otherEntity = new OtherEntity
             {
-                DbId = new DatabaseId<OtherEntity>(),
+                Id = DatabaseId.Create<OtherEntity>(OtherFixedGuid),
                 NumberValue = 30,
                 TextValue = "Other Entity",
             };
@@ -33,6 +36,7 @@ public static class PersistenceTest
             try
             {
                 await db.SaveAsync(entity, cancellationToken);
+                await db.SaveAsync(otherEntity, cancellationToken);
                 logger.LogInformation("Entity saved successfully. Entity id: {0}", entity.DbId);
             }
             catch (Exception ex)
@@ -43,7 +47,7 @@ public static class PersistenceTest
 
             try
             {
-                var entity2 = await db.GetAsync(entity.DbId, cancellationToken);
+                var entity2 = await db.GetAsync(entity.Id, cancellationToken);
                 if (entity2 is null)
                 {
                     logger.LogError("Entity not found");
