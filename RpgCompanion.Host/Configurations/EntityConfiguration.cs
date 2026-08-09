@@ -1,7 +1,5 @@
 namespace RpgCompanion.Host.Configuration;
 
-using MongoDB.Bson.Serialization;
-
 internal class EntityConfiguration<TEntity>(
     PluginKey _pluginKey,
     EntityArchives _entityArchives,
@@ -24,18 +22,6 @@ internal class EntityConfiguration<TEntity>(
             Name = _name,
         };
         _services.AddKeyedSingleton(_key, descriptor);
-
-        if (!BsonClassMap.IsClassMapRegistered(typeof(TEntity)))
-        {
-            var classMap = new BsonClassMap(typeof(TEntity));
-            classMap.AutoMap();
-            classMap.MapIdProperty(nameof(IEntity.DbId));
-            // if (typeof(TEntity).IsAssignableTo(typeof(IEntity<>).MakeGenericType(typeof(TEntity))))
-            // {
-            //     classMap.Map
-            // }
-            BsonClassMap.RegisterClassMap(classMap);
-        }
 
         foreach (Action registration in _subtypeRegistrations.Values)
         {
@@ -62,10 +48,10 @@ internal class EntityConfiguration<TEntity>(
 
     public void AddSubtype<TSubtype>() where TSubtype : TEntity
     {
-        _subtypeRegistrations[typeof(TSubtype)] = () =>
-        {
-            var cm = BsonClassMap.LookupClassMap(typeof(TEntity));
-            cm.AddKnownType(typeof(TSubtype));
-        };
+        // _subtypeRegistrations[typeof(TSubtype)] = () =>
+        // {
+        //     var cm = BsonClassMap.LookupClassMap(typeof(TEntity));
+        //     cm.AddKnownType(typeof(TSubtype));
+        // };
     }
 }

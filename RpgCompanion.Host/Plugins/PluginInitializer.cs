@@ -3,20 +3,31 @@ namespace RpgCompanion.Host;
 using Configuration;
 using HostExclusive;
 
+internal interface InitializationResult
+{
+    internal readonly record struct None : InitializationResult;
+
+    internal readonly record struct Completed(PluginMetadata Metadata, bool WasAsync) : InitializationResult;
+
+    internal readonly record struct Faulted(Exception Exception) : InitializationResult;
+
+    internal readonly record struct NoInitializationFound : InitializationResult;
+}
+
 internal class PluginInitializer
 {
-    internal async Task<List<IInitializationResult>> InitializeMany(IEnumerable<PluginMetadata> plugins, CancellationToken cancellationToken = default)
+    internal async Task<List<InitializationResult>> InitializeMany(IEnumerable<PluginMetadata> plugins, CancellationToken cancellationToken = default)
     {
         var initializationTasks = plugins.Select(p => InitializeSingle(p, cancellationToken)).ToList();
         await Task.WhenAll(initializationTasks);
         return initializationTasks.Select(t => t.Result).ToList();
     }
 
-    internal async Task<IInitializationResult> InitializeSingle(PluginMetadata metadata, CancellationToken cancellationToken = default)
+    internal async Task<InitializationResult> InitializeSingle(PluginMetadata metadata, CancellationToken cancellationToken = default)
     {
         if (!metadata.Loaded)
         {
-            return InitializationResult.Faulted(new InvalidOperationException("Plugin is not loaded yet"));
+            return new InitializationResult.Faulted(new InvalidOperationException("Plugin is not loaded yet"));
         }
         try
         {
@@ -29,7 +40,7 @@ internal class PluginInitializer
             }
             if (asyncInitialization is null && syncInitialization is null)
             {
-                return InitializationResult.NoInitializationFound;
+                return new InitializationResult.NoInitializationFound();
             }
 
             var scopeFactory = metadata.Services.GetRequiredService<IServiceScopeFactory>();
@@ -42,18 +53,18 @@ internal class PluginInitializer
             var hostContext = scope.ServiceProvider.GetRequiredService<HostContext>();
             await using var context = new InitializationContext(scope, hostContext, registry, cts);
 
-            IInitializationResult result = InitializationResult.None;
+            InitializationResult result = new InitializationResult.None();
 
             if (asyncInitialization is not null)
             {
                 await asyncInitialization.Initialize(context, cancellationToken);
-                result = InitializationResult.Completed(metadata, true);
+                result = new InitializationResult.Completed(metadata, true);
                 metadata.Initialized = true;
             }
             else if (syncInitialization is not null)
             {
                 syncInitialization!.Initialize(context);
-                result = InitializationResult.Completed(metadata, true);
+                result = new InitializationResult.Completed(metadata, true);
                 metadata.Initialized = true;
             }
 
@@ -61,7 +72,7 @@ internal class PluginInitializer
         }
         catch (Exception e)
         {
-            return InitializationResult.Faulted(e);
+            return new InitializationResult.Faulted(e);
         }
     }
 }

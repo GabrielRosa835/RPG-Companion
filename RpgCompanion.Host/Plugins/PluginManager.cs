@@ -1,8 +1,10 @@
 namespace RpgCompanion.Host;
 
-internal class PluginManager
+using System.Text.Json;
+
+internal class PluginManager(ILogger<PluginManager> _logger)
 {
-    internal Task<List<PluginMetadata>> FindPlugins(string targetFolder, CancellationToken cancellationToken = default) => Task.Run(() =>
+    internal async Task<List<PluginMetadata>> FindPlugins(string targetFolder, CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(targetFolder))
         {
@@ -10,18 +12,43 @@ internal class PluginManager
         }
 
         var plugins = new List<PluginMetadata>();
+        var directories = Directory.GetDirectories(targetFolder);
 
-        foreach (var file in Directory.GetFiles(targetFolder, "*.dll", SearchOption.AllDirectories))
+        foreach (var dir in directories)
         {
-            var fileName = Path.GetFileNameWithoutExtension(file);
-            if (plugins.Any(p => p.Resource != fileName))
+            var manifestPath = Path.Combine(dir, "manifest.json");
+
+            if (!File.Exists(manifestPath))
             {
-                continue;
+                continue; // Skip folders without a manifest
             }
-            plugins.Add(new PluginMetadata(file));
+
+            try
+            {
+                await using var stream = File.OpenRead(manifestPath);
+                var manifest = await JsonSerializer.DeserializeAsync<PluginManifest>(
+                    stream,
+                    PluginManifest.SerializerOptions,
+                    cancellationToken);
+
+                if (manifest != null && !string.IsNullOrWhiteSpace(manifest.EntryPoint))
+                {
+                    // Check for duplicate IDs to prevent loading collisions
+                    if (plugins.Any(p => p.Manifest.Id == manifest.Id))
+                    {
+                        continue;
+                    }
+
+                    plugins.Add(new PluginMetadata(dir, manifest));
+                }
+            }
+            catch (JsonException ex)
+            {
+                // Handle or log malformed manifest JSON here
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         return plugins;
-    },
-    cancellationToken);
+    }
 }

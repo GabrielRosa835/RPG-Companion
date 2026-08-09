@@ -4,7 +4,7 @@ using Core;
 using Events;
 using Intents;
 using Microsoft.Extensions.Logging;
-using Persistence;
+// using Persistence;
 
 public class Initialization(
     IEventTrigger _trigger,
@@ -20,7 +20,7 @@ public class Initialization(
 
         await EventTest.Run(_trigger, logger, cancellationToken);
         await IntentTest.Run(_dispatcher, logger, cancellationToken);
-        await PersistenceTest.Run(_database, logger, cancellationToken);
+        // await PersistenceTest.Run(_database, logger, cancellationToken);
 
         logger.LogInformation("Finished Initializing RpgCompanion.Canvas");
     }

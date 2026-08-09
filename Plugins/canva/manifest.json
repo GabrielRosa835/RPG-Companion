@@ -1,0 +1,9 @@
+{
+  "id": "com.teste.canva",
+  "name": "General application tests",
+  "version": "1.0.0",
+  "author": "GabrielRosa835",
+  "description": "Holds some tests that are used to test the application's infrastructure",
+  "entryPoint": "RpgCompanion.Canva.dll",
+  "pdkVersion": "1.0.0"
+}

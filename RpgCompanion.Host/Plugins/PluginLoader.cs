@@ -1,9 +1,15 @@
 namespace RpgCompanion.Host;
 
 using System.Reflection;
-using System.Runtime.Loader;
 using Configuration;
 using HostExclusive;
+
+internal interface LoadResult
+{
+    internal readonly record struct None : LoadResult;
+    internal readonly record struct Completed(PluginMetadata Metadata) : LoadResult;
+    internal readonly record struct Faulted(Exception Exception) : LoadResult;
+}
 
 internal class PluginLoader(
     IServiceProvider _hostServices,
@@ -12,29 +18,37 @@ internal class PluginLoader(
     IntentArchives _intentArchives,
     EntityArchives _entityArchives)
 {
-    internal async Task<List<ILoadResult>> LoadMany(IEnumerable<PluginMetadata> plugins, CancellationToken cancellationToken = default)
+    internal async Task<List<LoadResult>> LoadMany(IEnumerable<PluginMetadata> plugins, CancellationToken cancellationToken = default)
     {
         var loadTasks = plugins.Select(p => LoadSingle(p, cancellationToken)).ToList();
         await Task.WhenAll(loadTasks);
         return loadTasks.Select(t => t.Result).ToList();
     }
 
-    internal Task<ILoadResult> LoadSingle(PluginMetadata metadata, CancellationToken cancellationToken = default) => Task.Run(() =>
+    internal Task<LoadResult> LoadSingle(PluginMetadata metadata, CancellationToken cancellationToken = default) => Task.Run<LoadResult>(() =>
     {
         try
         {
-            var context = new AssemblyLoadContext(metadata.Resource, isCollectible: true);
-            var assembly = context.LoadFromAssemblyPath(metadata.FilePath);
+            // Verify the bin/dll file actually exists before trying to load it
+            if (!File.Exists(metadata.EntryPointPath))
+            {
+                return new LoadResult.Faulted(new FileNotFoundException($"Plugin entry point not found at {metadata.EntryPointPath}"));
+            }
 
-            var manifestType = ProcessAssembly(assembly);
+            // 1. Use your custom context and pass the plugin ID and specific DLL path
+            var context = new PluginLoadContext(metadata.Manifest.Id, metadata.EntryPointPath);
+
+            // 2. Load the assembly into the custom context
+            var assembly = context.LoadFromAssemblyPath(metadata.EntryPointPath);
+
+            var manifestType = ProcessAssemblyTypes(assembly);
 
             if (manifestType is null || Activator.CreateInstance(manifestType) is not IManifest manifest)
             {
-                return LoadResult.Faulted(new InvalidOperationException($"Could not find manifest for plugin {metadata.Resource}"));
+                return new LoadResult.Faulted(new InvalidOperationException($"Could not find IManifest implementation for plugin {metadata.Manifest.Id}"));
             }
 
             IServiceCollection services = new ServiceCollection();
-
             services.AddPluginServices(_hostServices);
 
             var configuration = new PluginConfiguration(services,
@@ -50,20 +64,21 @@ internal class PluginLoader(
             metadata.Descriptor = configuration.Build();
             metadata.Services = services.BuildServiceProvider();
             metadata.Assembly = assembly;
+            metadata.LoadContext = context;
             metadata.Loaded = true;
 
             _pluginArchives.Add(metadata);
 
-            return LoadResult.Completed(metadata);
+            return new LoadResult.Completed(metadata);
         }
         catch (Exception e)
         {
-            return LoadResult.Faulted(e);
+            return new LoadResult.Faulted(e);
         }
     },
     cancellationToken);
 
-    internal Type? ProcessAssembly(Assembly assembly)
+    internal Type? ProcessAssemblyTypes(Assembly assembly)
     {
         Type? manifestType = null;
 
@@ -72,28 +87,8 @@ internal class PluginLoader(
             if (type.Implements(typeof(IManifest)))
             {
                 manifestType = type;
-                continue;
             }
-            // if (type.Implements(typeof(IEntity)))
-            // {
-            //     var cm = new BsonClassMap(type);
-            //     cm.AutoMap();
-            //     cm.MapIdProperty(nameof(IEntity.DbId));
-            //     BsonClassMap.RegisterClassMap(cm);
-            //
-            //     var subtypeAttributes = type
-            //         .GetCustomAttributes(typeof(HasSubtypeAttribute), false)
-            //         .OfType<HasSubtypeAttribute>()
-            //         .ToList();
-            //
-            //     if (subtypeAttributes.Count > 0)
-            //     {
-            //         foreach (var attr in subtypeAttributes)
-            //         {
-            //             cm.AddKnownType(attr.KnownType);
-            //         }
-            //     }
-            // }
+            // Process other assembly types
         }
 
         return manifestType;

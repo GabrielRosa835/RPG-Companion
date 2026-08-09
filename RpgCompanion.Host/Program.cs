@@ -1,7 +1,4 @@
-using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
 using RpgCompanion.Host;
-using RpgCompanion.Host.Database;
 using RpgCompanion.Host.Events;
 using RpgCompanion.Host.HostExclusive;
 using RpgCompanion.Host.Intents;
@@ -26,31 +23,12 @@ builder.Services.AddSingleton<IEnvironmentAccessor>(sp => sp.GetRequiredService<
 builder.Services.AddTransient<HostContext>();
 builder.Services.AddTransient<HostRegistry>();
 
-builder.Services.AddSingleton<IMongoClient>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    return new MongoClient(config["Persistence:ConnectionStrings:Local"]);
-});
-
-builder.Services.AddScoped<IMongoDatabase>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var client = sp.GetRequiredService<IMongoClient>();
-    return client.GetDatabase(config["Persistence:DatabaseName"]);
-});
-
-builder.Services.AddScoped<MongoDatabase>();
-builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<MongoDatabase>());
-
 builder.Services.AddLogging(log =>
 {
     log.AddConsole();
     log.SetMinimumLevel(LogLevel.Trace);
     log.AddDebug();
 });
-
-// 1. Register your custom serializers for Id and Rel
-BsonSerializer.RegisterSerializationProvider(new AppSerializationProvider());
 
 var host = builder.Build();
 
@@ -68,13 +46,13 @@ var loadResults = await pluginLoader.LoadMany(plugins);
 var loaded = new List<PluginMetadata>();
 foreach (var loadResult in loadResults)
 {
-    if (loadResult is ILoadResult.Faulted faulted)
+    if (loadResult is LoadResult.Faulted faulted)
     {
         logger.LogError(faulted.Exception, "An exception occurred");
     }
-    else if (loadResult is ILoadResult.Completed completed)
+    else if (loadResult is LoadResult.Completed completed)
     {
-        logger.LogInformation("Plugin {0} successfully loaded", completed.Metadata.Resource);
+        logger.LogInformation("Plugin {0} successfully loaded", completed.Metadata.Manifest.Id);
         loaded.Add(completed.Metadata);
     }
 }
@@ -82,13 +60,13 @@ foreach (var loadResult in loadResults)
 var initializationResults = await pluginInitializer.InitializeMany(loaded);
 foreach (var initializationResult in initializationResults)
 {
-    if (initializationResult is IInitializationResult.Faulted faulted)
+    if (initializationResult is InitializationResult.Faulted faulted)
     {
         logger.LogError(faulted.Exception, "An exception occurred");
     }
-    else if (initializationResult is IInitializationResult.Completed completed)
+    else if (initializationResult is InitializationResult.Completed completed)
     {
-        logger.LogInformation("Plugin {0} successfully initialized", completed.Metadata.Resource);
+        logger.LogInformation("Plugin {0} successfully initialized", completed.Metadata.Manifest.Id);
     }
 }
 
