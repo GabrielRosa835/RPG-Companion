@@ -1,4 +1,4 @@
-namespace RpgCompanion.Toolbox;
+namespace RpgCompanion.Core;
 
 public interface IStorage
 {

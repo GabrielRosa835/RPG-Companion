@@ -2,7 +2,7 @@
 
 public interface IPluginConfiguration
 {
-    void WithKey(PluginKey key);
+    void WithKey(string key);
     void WithIdentifier(string identifier);
     void WithName(string name);
     void WithVersion(string version);

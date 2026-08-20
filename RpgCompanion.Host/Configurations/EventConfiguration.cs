@@ -1,4 +1,4 @@
-namespace RpgCompanion.Host.Configuration;
+namespace RpgCompanion.Host;
 
 internal class EventConfiguration<TEvent>(
     PluginKey _pluginKey,
@@ -22,9 +22,9 @@ internal class EventConfiguration<TEvent>(
         _eventArchives.Add(descriptor);
     }
 
-    public void WithKey(EventKey key)
+    public void WithKey(string key)
     {
-        _key = key;
+        _key = new EventKey(key);
     }
 
     public void WithName(string name)

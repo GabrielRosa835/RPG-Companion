@@ -5,5 +5,5 @@ namespace RpgCompanion.Core;
 /// </summary>
 public interface IPluginContext
 {
-    public PluginKey Key { get; }
+    public string Identifier { get; }
 }

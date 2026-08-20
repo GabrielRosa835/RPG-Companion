@@ -7,6 +7,9 @@
         <RootNamespace>RpgCompanion.Host</RootNamespace>
       <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
+    <ItemGroup>
+      <InternalsVisibleTo Include="RpgCompanion.Canva" />
+    </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="LiteDB" Version="6.0.0-prerelease.77" />
@@ -18,7 +21,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\RpgCompanion.Core.Extensions\RpgCompanion.Core.Extensions.csproj" />
       <ProjectReference Include="..\RpgCompanion.Core\RpgCompanion.Core.csproj" />
+      <ProjectReference Include="..\RpgCompanion.Toolbox\RpgCompanion.Toolbox.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Components\" />
     </ItemGroup>
 
 </Project>

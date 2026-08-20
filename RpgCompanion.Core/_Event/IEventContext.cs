@@ -9,8 +9,6 @@ public interface IEventContext : IEventTrigger
     /// </summary>
     IRegistry Registry { get; }
 
-    IHostContext Host { get; }
-
     /// <summary>
     /// Grants access to contextual in-memory storage
     /// </summary>

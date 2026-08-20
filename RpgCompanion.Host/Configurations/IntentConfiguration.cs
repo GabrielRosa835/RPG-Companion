@@ -1,4 +1,4 @@
-namespace RpgCompanion.Host.Configuration;
+namespace RpgCompanion.Host;
 
 internal class IntentConfiguration<TIntent>(
     PluginKey _pluginKey,
@@ -27,9 +27,9 @@ internal class IntentConfiguration<TIntent>(
         _intentArchives.Add(descriptor);
     }
 
-    public void WithKey(IntentKey key)
+    public void WithKey(string key)
     {
-        _key = key;
+        _key = new IntentKey(key);
     }
 
     public void WithName(string name)

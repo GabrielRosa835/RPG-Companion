@@ -1,6 +1,4 @@
-namespace RpgCompanion.Host.Configuration;
-
-using Toolbox;
+namespace RpgCompanion.Host;
 
 internal class PluginConfiguration(
     IServiceCollection _services,
@@ -10,7 +8,7 @@ internal class PluginConfiguration(
     : IPluginConfiguration
 {
     internal PluginKey _key = new(Guid.CreateVersion7().ToString());
-    internal Maybe<string?> _identifier;
+    internal Identifier? _identifier;
     internal string? _name;
     internal string? _version;
     internal Action? _initializationRegistration;
@@ -43,9 +41,9 @@ internal class PluginConfiguration(
         return descriptor;
     }
 
-    public void WithKey(PluginKey key)
+    public void WithKey(string key)
     {
-        _key = key;
+        _key = new PluginKey(key);
     }
 
     public void WithName(string name)
@@ -60,7 +58,7 @@ internal class PluginConfiguration(
 
     public void WithIdentifier(string identifier)
     {
-        _identifier = identifier;
+        _identifier = new Identifier(identifier);
     }
 
     public void WithInitialization<TInitialization>() where TInitialization : class, IInitialization
@@ -125,18 +123,18 @@ internal class PluginConfiguration(
         };
     }
 
-    private static string VerifyIdentifier(Maybe<string?> identifier)
+    private static string VerifyIdentifier(Identifier? identifier)
     {
-        if (!identifier.TryGetValue(out var identifierValue))
+        if (!identifier.HasValue)
         {
             throw new InvalidOperationException("Identifier must be specified");
         }
-        if (identifierValue is null)
+        if (identifier.Value.Value is null)
         {
             throw new InvalidOperationException("Identifier cannot be null");
         }
 
-        identifierValue = identifierValue.Trim();
+        string identifierValue = identifier.Value.Value.Trim();
 
         if (string.IsNullOrWhiteSpace(identifierValue))
         {
@@ -149,4 +147,6 @@ internal class PluginConfiguration(
 
         return identifierValue;
     }
+
+    private readonly record struct Identifier(string? Value);
 }

@@ -11,8 +11,9 @@ builder.Services.AddSingleton<EventArchives>();
 builder.Services.AddSingleton<IntentArchives>();
 
 builder.Services.AddSingleton<PluginManager>();
-builder.Services.AddSingleton<PluginLoader>();
-builder.Services.AddSingleton<PluginInitializer>();
+builder.Services.AddSingleton<IPluginInitializer, PluginInitializer>();
+builder.Services.AddSingleton<IPluginLoader, PluginLoader>();
+builder.Services.AddSingleton<IPluginInitializer, PluginInitializer>();
 
 builder.Services.AddSingleton<EventEngine>();
 builder.Services.AddSingleton<EnvironmentAccessor>();
@@ -26,8 +27,8 @@ builder.Services.AddTransient<HostRegistry>();
 builder.Services.AddLogging(log =>
 {
     log.AddConsole();
-    log.SetMinimumLevel(LogLevel.Trace);
     log.AddDebug();
+    log.SetMinimumLevel(LogLevel.Trace);
 });
 
 var host = builder.Build();
@@ -35,15 +36,13 @@ var host = builder.Build();
 await host.StartAsync();
 
 var pluginManager = host.Services.GetRequiredService<PluginManager>();
-var pluginLoader = host.Services.GetRequiredService<PluginLoader>();
-var pluginInitializer = host.Services.GetRequiredService<PluginInitializer>();
 var configuration = host.Services.GetRequiredService<IConfiguration>();
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 var plugins = await pluginManager.FindPlugins(configuration[ConfigKeys.PluginsFolder]!);
-var loadResults = await pluginLoader.LoadMany(plugins);
+var loadResults = await pluginManager.LoadMany(plugins);
 
-var loaded = new List<PluginMetadata>();
+var loaded = new List<LoadedPluginMetadata>();
 foreach (var loadResult in loadResults)
 {
     if (loadResult is LoadResult.Faulted faulted)
@@ -57,7 +56,7 @@ foreach (var loadResult in loadResults)
     }
 }
 
-var initializationResults = await pluginInitializer.InitializeMany(loaded);
+var initializationResults = await pluginManager.InitializeMany(loaded);
 foreach (var initializationResult in initializationResults)
 {
     if (initializationResult is InitializationResult.Faulted faulted)

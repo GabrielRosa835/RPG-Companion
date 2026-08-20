@@ -1,54 +1,33 @@
 namespace RpgCompanion.Host;
 
-using System.Text.Json;
-
-internal class PluginManager(ILogger<PluginManager> _logger)
+internal class PluginManager(
+    IPluginFinder _finder,
+    IPluginLoader _loader,
+    IPluginInitializer _initializer)
+    : IPluginFinder, IPluginLoader, IPluginInitializer
 {
-    internal async Task<List<PluginMetadata>> FindPlugins(string targetFolder, CancellationToken cancellationToken = default)
+    public Task<List<PluginMetadata>> FindPlugins(string targetFolder, CancellationToken cancellationToken = default)
     {
-        if (!Directory.Exists(targetFolder))
-        {
-            throw new DirectoryNotFoundException(targetFolder);
-        }
+        return _finder.FindPlugins(targetFolder, cancellationToken);
+    }
 
-        var plugins = new List<PluginMetadata>();
-        var directories = Directory.GetDirectories(targetFolder);
+    public Task<List<LoadResult>> LoadMany(IEnumerable<PluginMetadata> plugins, CancellationToken cancellationToken = default)
+    {
+        return _loader.LoadMany(plugins, cancellationToken);
+    }
 
-        foreach (var dir in directories)
-        {
-            var manifestPath = Path.Combine(dir, "manifest.json");
+    public Task<LoadResult> LoadSingle(PluginMetadata metadata, CancellationToken cancellationToken = default)
+    {
+        return _loader.LoadSingle(metadata, cancellationToken);
+    }
 
-            if (!File.Exists(manifestPath))
-            {
-                continue; // Skip folders without a manifest
-            }
+    public Task<List<InitializationResult>> InitializeMany(IEnumerable<LoadedPluginMetadata> plugins, CancellationToken cancellationToken = default)
+    {
+        return _initializer.InitializeMany(plugins, cancellationToken);
+    }
 
-            try
-            {
-                await using var stream = File.OpenRead(manifestPath);
-                var manifest = await JsonSerializer.DeserializeAsync<PluginManifest>(
-                    stream,
-                    PluginManifest.SerializerOptions,
-                    cancellationToken);
-
-                if (manifest != null && !string.IsNullOrWhiteSpace(manifest.EntryPoint))
-                {
-                    // Check for duplicate IDs to prevent loading collisions
-                    if (plugins.Any(p => p.Manifest.Id == manifest.Id))
-                    {
-                        continue;
-                    }
-
-                    plugins.Add(new PluginMetadata(dir, manifest));
-                }
-            }
-            catch (JsonException ex)
-            {
-                // Handle or log malformed manifest JSON here
-                _logger.LogError(ex, ex.Message);
-            }
-        }
-
-        return plugins;
+    public Task<InitializationResult> InitializeSingle(LoadedPluginMetadata metadata, CancellationToken cancellationToken = default)
+    {
+        return _initializer.InitializeSingle(metadata, cancellationToken);
     }
 }

@@ -2,5 +2,5 @@
 
 public interface IManifest
 {
-    void Configure(IPluginConfiguration plugin, IHostContext host);
+    void Configure(IPluginConfiguration plugin, IRegistry hostRegistry);
 }

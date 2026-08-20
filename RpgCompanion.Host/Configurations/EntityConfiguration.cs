@@ -1,4 +1,4 @@
-namespace RpgCompanion.Host.Configuration;
+namespace RpgCompanion.Host;
 
 internal class EntityConfiguration<TEntity>(
     PluginKey _pluginKey,
@@ -31,9 +31,9 @@ internal class EntityConfiguration<TEntity>(
         _entityArchives.Add(descriptor);
     }
 
-    public void WithKey(EntityKey key)
+    public void WithKey(string key)
     {
-        _key = key;
+        _key = new EntityKey(key);
     }
 
     public void WithCollection(string collectionName)
