@@ -27,7 +27,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Components\" />
+      <Folder Include="Components\Questions\" />
+      <Folder Include="Components\Signals\" />
     </ItemGroup>
 
 </Project>

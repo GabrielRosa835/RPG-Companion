@@ -92,7 +92,7 @@ internal class EventEngine(
                 }
             }
 
-            return ct.IsCancellationRequested ? new EventResult.Stopped() : execution.Result!;
+            return ct.IsCancellationRequested ? new EventResult.Halted() : execution.Result!;
         }
         catch (Exception ex)
         {

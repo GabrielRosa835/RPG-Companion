@@ -4,7 +4,7 @@ public class RuleApplierImpl(
     IServiceScopeFactory _scopeFactory)
     : IRuleApplier
 {
-    public TSubject Apply<TSubject>(TSubject subject, IRule<TSubject> rule)
+    public RuleResult<TSubject> Apply<TSubject>(TSubject subject, IRule<TSubject> rule)
     {
         using var scope = _scopeFactory.CreateScope();
         var ctx = new RuleContextImpl();
