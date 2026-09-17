@@ -9,12 +9,12 @@ public record ExceptionDTO
     public List<ExceptionDTO> InnerExceptions { get; } = [];
 
     public ExceptionDTO() { }
-    public ExceptionDTO(Exception e)
+    public ExceptionDTO(Exception e, bool keepStackTrace = true)
     {
         Type = e.GetType().FullName!;
         Message = e.Message;
         Details = e.ToString();
-        StackTrace = e.StackTrace!;
+        if (keepStackTrace) StackTrace = e.StackTrace!;
         if (e is AggregateException aggEx)
         {
             foreach (var inner in aggEx.InnerExceptions)
@@ -28,5 +28,5 @@ public record ExceptionDTO
         }
     }
 
-    public Exception ToException() => new Exception($"[{Type}] {Message}");
+    public Exception ToException() => new($"[{Type}] {Message}");
 }

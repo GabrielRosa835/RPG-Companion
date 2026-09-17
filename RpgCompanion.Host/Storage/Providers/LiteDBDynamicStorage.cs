@@ -3,6 +3,7 @@ namespace RpgCompanion.Host;
 using LiteDB;
 using Microsoft.Extensions.Options;
 using Toolbox;
+using Toolbox.Storage;
 
 internal class LiteDbDynamicStorage : IStorage, IDisposable
 {

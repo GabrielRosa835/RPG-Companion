@@ -1,6 +1,6 @@
 namespace RpgCompanion.Host;
 
-using Toolbox;
+using Toolbox.Storage;
 
 internal class EventContextFactory(IRegistry registry)
 {

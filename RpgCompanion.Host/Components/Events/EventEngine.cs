@@ -4,7 +4,8 @@ using System.Collections.Concurrent;
 
 internal class EventEngine(
     EnvironmentAccessor _environmentAccessor,
-    PluginAccessor _pluginAccessor)
+    PluginAccessor _pluginAccessor,
+    ScopeManager _scopeManager)
     : IEventTrigger
 {
     private static readonly TimeSpan MinimumExecutionInterval = TimeSpan.FromMilliseconds(10);

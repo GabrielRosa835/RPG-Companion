@@ -3,12 +3,12 @@ namespace RpgCompanion.Canva;
 using Core;
 using Microsoft.Extensions.Logging;
 
-public class Intent : IIntent, IIntentProcessor<Intent>
+public class Intent : IIntent, IIntentHandler<Intent>
 {
     public string TextValue { get; init; } = default!;
     public int NumberValue { get; init; }
 
-    public void Process(Intent intent, IIntentContext context)
+    public void Handle(Intent intent, IntentContext context)
     {
         var logger = context.Host.Registry.Get<ILogger<Intent>>();
         for (int i = 0; i < 5; i++)

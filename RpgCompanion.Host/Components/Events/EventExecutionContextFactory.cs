@@ -3,8 +3,7 @@ namespace RpgCompanion.Host;
 internal class EventExecutionContextFactory(
     EventEngine engine,
     IEventFactory eventFactory,
-    EventContextFactory contextFactory,
-    ScopeProvider scopeProvider)
+    EventContextFactory contextFactory)
 {
     internal EventExecutionContext Create(CancellationToken ct)
     {
@@ -15,7 +14,6 @@ internal class EventExecutionContextFactory(
             Factory = eventFactory,
             CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(ct),
             Context = contextFactory.Create(context),
-            ServiceScope = scopeProvider.CreateScope(),
         };
         return context;
     }

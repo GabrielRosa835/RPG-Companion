@@ -1,5 +1,7 @@
 namespace RpgCompanion.Host;
 
+using Toolbox.Storage;
+
 internal static class PluginServices
 {
     internal static void AddPluginServices(this IServiceCollection services,
@@ -26,7 +28,7 @@ internal static class PluginServices
 
     private static void AddHostExclusiveServices(this IServiceCollection services, IServiceProvider hostServices)
     {
-        services.AddSingleton<ScopeProvider>();
+        services.AddSingleton<ScopeManager>();
         services.AddSingleton<EventExecutionContext>();
         services.AddSingleton<EventEngine>();
         services.AddFromHost<EnvironmentAccessor>(hostServices);

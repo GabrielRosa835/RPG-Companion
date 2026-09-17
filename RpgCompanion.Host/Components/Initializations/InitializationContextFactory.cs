@@ -1,12 +1,12 @@
 namespace RpgCompanion.Host;
 
-internal class InitializationContextFactory(ScopeProvider scopeProvider, IRegistry registry)
+internal class InitializationContextFactory(ScopeManager scopeManager, IRegistry registry)
 {
     public InitializationContext Create(CancellationToken ct)
     {
         return new InitializationContext
         {
-            Scope = scopeProvider.CreateScope(),
+            Scope = scopeManager.CreateScope(),
             Registry = registry,
             CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(ct)
         };

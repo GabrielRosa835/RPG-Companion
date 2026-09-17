@@ -13,7 +13,7 @@ internal class PluginInitializer : IPluginInitializer
     {
         try
         {
-            var scopeProvider = metadata.Services.GetRequiredService<ScopeProvider>();
+            var scopeProvider = metadata.Services.GetRequiredService<ScopeManager>();
             var scope = scopeProvider.CreateScope();
             var initializationContextFactory = scope.ServiceProvider.GetRequiredService<InitializationContextFactory>();
 

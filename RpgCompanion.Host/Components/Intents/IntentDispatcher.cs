@@ -11,14 +11,13 @@ internal class IntentDispatcher(
         var (currentPlugin, currentContext) = _pluginAccessor.Get(intent);
         _environmentAccessor.CurrentPlugin = currentContext;
 
-        var ctx = currentPlugin.Services.GetRequiredService<IntentContext>();
-        ctx.CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
+        var factory = currentPlugin.Services.GetRequiredService<IntentContextFactory>();
+        var ctx = factory.Create(cancellationToken);
         IntentExecutor executor = _intentArchives.Executors[intent.GetType()];
 
         await using (ctx)
         {
-            await executor.Execute(ctx.Scope.ServiceProvider, intent, ctx, cancellationToken).ConfigureAwait(false);
+            await executor.Execute(intent, currentPlugin.Services.GetRequiredService, ctx).ConfigureAwait(false);
         }
     }
 
@@ -27,14 +26,13 @@ internal class IntentDispatcher(
         var (currentPlugin, currentContext) = _pluginAccessor.Get(intent);
         _environmentAccessor.CurrentPlugin = currentContext;
 
-        var ctx = currentPlugin.Services.GetRequiredService<IntentContext>();
-        ctx.CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
+        var factory = currentPlugin.Services.GetRequiredService<IntentContextFactory>();
+        var ctx = factory.Create(cancellationToken);
         IntentExecutor executor = _intentArchives.Executors[intent.GetType()];
 
         await using (ctx)
         {
-            var result = await executor.Execute(ctx.Scope.ServiceProvider, intent, ctx, cancellationToken).ConfigureAwait(false);
+            var result = await executor.Execute(intent, currentPlugin.Services.GetRequiredService, ctx).ConfigureAwait(false);
             return (TResult) result!;
         }
     }

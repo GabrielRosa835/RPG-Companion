@@ -1,6 +1,6 @@
 namespace RpgCompanion.Host.Storage;
 
-using Providers;
+using Toolbox.Storage;
 
 public class StorageFactory : IStorageFactory
 {

@@ -1,12 +1,12 @@
 namespace RpgCompanion.Host;
 
-using Toolbox;
+using Toolbox.Storage;
 
 internal class EventContext : IEventContext
 {
-    internal EventExecutionContext ExecutionContext { get; init; } = default!;
-    public IRegistry Registry { get; init; } = default!;
-    public IStorage Storage { get; init; } = default!;
+    internal required EventExecutionContext ExecutionContext { get; init; }
+    public required IRegistry Registry { get; init; }
+    public required IStorage Storage { get; init; }
 
     public CancellationToken CancellationToken => ExecutionContext.CancellationSource.Token;
 

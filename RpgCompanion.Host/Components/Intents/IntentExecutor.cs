@@ -3,21 +3,19 @@ namespace RpgCompanion.Host;
 internal interface IntentExecutor
 {
     Task<object?> Execute(
-        IServiceProvider serviceProvider,
-        IIntentBase intent,
-        IIntentContext context,
-        CancellationToken cancellationToken);
+        object intent,
+        Func<Type, object> services,
+        IntentContext context);
 
     internal readonly struct Sync<TIntent> : IntentExecutor where TIntent : IIntent
     {
         public Task<object?> Execute(
-            IServiceProvider serviceProvider,
-            IIntentBase intent,
-            IIntentContext context,
-            CancellationToken cancellationToken)
+            object intent,
+            Func<Type, object> services,
+            IntentContext context)
         {
-            var processor = serviceProvider.GetRequiredService<IIntentProcessor<TIntent>>();
-            processor.Process((TIntent) intent, context);
+            var handler = (IIntentHandler<TIntent>) services(typeof(IIntentHandler<TIntent>));
+            handler.Handle((TIntent) intent, context);
             return Task.FromResult<object?>(null);
         }
     }
@@ -25,13 +23,12 @@ internal interface IntentExecutor
     internal readonly struct Async<TIntent> : IntentExecutor where TIntent : IIntent
     {
         public async Task<object?> Execute(
-            IServiceProvider serviceProvider,
-            IIntentBase intent,
-            IIntentContext context,
-            CancellationToken cancellationToken)
+            object intent,
+            Func<Type, object> services,
+            IntentContext context)
         {
-            var processor = serviceProvider.GetRequiredService<IAsyncIntentProcessor<TIntent>>();
-            await processor.Process((TIntent) intent, context, cancellationToken);
+            var handler = (IIntentHandler<TIntent>) services(typeof(IIntentHandler<TIntent>));
+            await handler.Handle((TIntent) intent, context);
             return null;
         }
     }
@@ -39,13 +36,12 @@ internal interface IntentExecutor
     internal readonly struct SyncResult<TIntent, TResult> : IntentExecutor where TIntent : IIntent<TResult>
     {
         public Task<object?> Execute(
-            IServiceProvider serviceProvider,
-            IIntentBase intent,
-            IIntentContext context,
-            CancellationToken cancellationToken)
+            object intent,
+            Func<Type, object> services,
+            IntentContext context)
         {
-            var processor = serviceProvider.GetRequiredService<IIntentProcessor<TIntent, TResult>>();
-            var result = processor.Process((TIntent) intent, context);
+            var handler = (IIntentHandler<TIntent, TResult>) services(typeof(IIntentHandler<TIntent, TResult>));
+            var result = handler.Handle((TIntent) intent, context);
             return Task.FromResult<object?>(result);
         }
     }
@@ -53,13 +49,12 @@ internal interface IntentExecutor
     internal readonly struct AsyncResult<TIntent, TResult> : IntentExecutor where TIntent : IIntent<TResult>
     {
         public async Task<object?> Execute(
-            IServiceProvider serviceProvider,
-            IIntentBase intent,
-            IIntentContext context,
-            CancellationToken cancellationToken)
+            object intent,
+            Func<Type, object> services,
+            IntentContext context)
         {
-            var processor = serviceProvider.GetRequiredService<IAsyncIntentProcessor<TIntent, TResult>>();
-            var result = await processor.Process((TIntent) intent, context, cancellationToken);
+            var handler = (IIntentHandler<TIntent, TResult>) services(typeof(IIntentHandler<TIntent, TResult>));
+            var result = await handler.Handle((TIntent) intent, context);
             return result;
         }
     }

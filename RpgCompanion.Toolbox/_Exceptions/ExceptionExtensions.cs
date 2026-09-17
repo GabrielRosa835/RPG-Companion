@@ -6,11 +6,11 @@ public static class ExceptionExtensions
 {
     extension(Exception? exception)
     {
-        public void PrintDetails() => Console.WriteLine(exception?.Details());
+        public void PrintDetails() => Console.WriteLine(exception?.Details);
 
-        private void BuildMessage(StringBuilder stringBuilder, int currentDepth)
+        private StringBuilder BuildMessage(StringBuilder stringBuilder, int currentDepth)
         {
-            if (exception is null) return;
+            if (exception is null) return stringBuilder;
 
             string tabs = new('\t', currentDepth);
 
@@ -25,24 +25,16 @@ public static class ExceptionExtensions
                 {
                     innerException.BuildMessage(stringBuilder, currentDepth + 1);
                 }
-                return;
+                return stringBuilder;
             }
             exception.InnerException?.BuildMessage(stringBuilder, currentDepth + 1);
+            return stringBuilder;
         }
     }
 
     extension(Exception exception)
     {
-        public string Details()
-        {
-            return $"{exception.FullMessage()}\n{exception.StackTrace}";
-        }
-
-        public string FullMessage()
-        {
-            var stringBuilder = new StringBuilder();
-            exception.BuildMessage(stringBuilder, 0);
-            return stringBuilder.ToString().TrimEnd();
-        }
+        public string Details => $"{exception.FullMessage}\n{exception.StackTrace}";
+        public string FullMessage => exception.BuildMessage(new StringBuilder(), 0).ToString().TrimEnd();
     }
 }

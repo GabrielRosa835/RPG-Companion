@@ -1,38 +1,20 @@
 namespace RpgCompanion.Host;
 
-internal class IntentContext : IIntentContext, IDisposable, IAsyncDisposable
+using Common;
+
+internal class IntentContext : IAsyncIntentContext, IDisposable, IAsyncDisposable
 {
-    public IntentContext(ScopeProvider scopeProvider)
-    {
-        Scope = scopeProvider.CreateScope();
-        Registry = Scope.ServiceProvider.GetRequiredService<IRegistry>();
-    }
-
-    internal IServiceScope Scope { get; }
-    public IRegistry Registry { get; }
-
-    internal CancellationTokenSource CancellationSource { get; set; } = default!;
+    internal required CancellationTokenSource CancellationSource { get; init; }
+    public required IRegistry Registry { get; init; }
     public CancellationToken CancellationToken => CancellationSource.Token;
 
     public void Dispose()
     {
-        Scope.Dispose();
         CancellationSource.Dispose();
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        await CastAndDispose(Scope);
-        await CastAndDispose(CancellationSource);
-    }
-
-    private static ValueTask CastAndDispose(IDisposable resource)
-    {
-        if (resource is IAsyncDisposable resourceAsyncDisposable)
-        {
-            return resourceAsyncDisposable.DisposeAsync();
-        }
-        resource.Dispose();
-        return ValueTask.CompletedTask;
+        return this.CastAndDispose(CancellationSource);
     }
 }

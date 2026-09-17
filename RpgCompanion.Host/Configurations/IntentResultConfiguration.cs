@@ -37,22 +37,22 @@ internal class IntentResultConfiguration<TIntent, TResult>(
         _name = name;
     }
 
-    public void WithProcessor<TProcessor>() where TProcessor : class, IIntentProcessor<TIntent, TResult>
+    public void WithProcessor<TProcessor>() where TProcessor : class, IIntentHandler<TIntent, TResult>
     {
         _processorType = typeof(TProcessor);
         _processorRegistration = () =>
         {
-            _services.AddTransient<IIntentProcessor<TIntent, TResult>, TProcessor>();
+            _services.AddTransient<IIntentHandler<TIntent, TResult>, TProcessor>();
             _services.AddKeyedSingleton<IntentExecutor>(_key, new IntentExecutor.SyncResult<TIntent, TResult>());
         };
     }
 
-    public void WithAsyncProcessor<TProcessor>() where TProcessor : class, IAsyncIntentProcessor<TIntent, TResult>
+    public void WithAsyncProcessor<TProcessor>() where TProcessor : class, IIntentHandler<TIntent, TResult>
     {
         _processorType = typeof(TProcessor);
         _processorRegistration = () =>
         {
-            _services.AddTransient<IAsyncIntentProcessor<TIntent, TResult>, TProcessor>();
+            _services.AddTransient<IIntentHandler<TIntent, TResult>, TProcessor>();
             _services.AddKeyedSingleton<IntentExecutor>(_key, new IntentExecutor.AsyncResult<TIntent, TResult>());
         };
     }

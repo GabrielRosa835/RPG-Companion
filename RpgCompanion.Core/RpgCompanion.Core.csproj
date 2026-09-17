@@ -17,4 +17,8 @@
     <Folder Include="_DontKnow\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RpgCompanion.Toolbox\RpgCompanion.Toolbox.csproj" />
+  </ItemGroup>
+
 </Project>

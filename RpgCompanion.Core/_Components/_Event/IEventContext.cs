@@ -1,5 +1,7 @@
 namespace RpgCompanion.Core;
 
+using Toolbox.Storage;
+
 public interface IEventContext : IEventTrigger
 {
     /// <summary>

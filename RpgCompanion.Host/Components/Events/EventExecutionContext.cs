@@ -8,7 +8,6 @@ internal class EventExecutionContext : IDisposable, IAsyncDisposable
 
     internal required EventEngine Engine { get; init; }
     internal required IEventFactory Factory { get; init; }
-    internal required IServiceScope ServiceScope { get; init; }
     internal required EventContext Context { get; init; }
     internal required CancellationTokenSource CancellationSource { get; init; }
 
@@ -24,12 +23,10 @@ internal class EventExecutionContext : IDisposable, IAsyncDisposable
     public void Dispose()
     {
         CancellationSource.Dispose();
-        ServiceScope.Dispose();
     }
 
     public async ValueTask DisposeAsync()
     {
         await this.CastAndDispose(CancellationSource);
-        await this.CastAndDispose(ServiceScope);
     }
 }
